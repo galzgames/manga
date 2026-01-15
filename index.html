@@ -888,6 +888,9 @@
         <div class="header">
             <h1>📚 Gestão de Mangás</h1>
             <p>Organize sua coleção de mangás com facilidade</p>
+            <div style="margin-top: 15px;">
+                <a href="buscar.html" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 5px; display: inline-block; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🔍 Página de Busca para Clientes</a>
+            </div>
         </div>
 
         <div id="message-container"></div>
@@ -924,6 +927,11 @@
                     <div class="form-group">
                         <label for="estoque">Quantidade em Estoque:</label>
                         <input type="number" id="estoque" placeholder="Digite a quantidade" value="1" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="localizacao">Localização (Prateleira/Posição):</label>
+                        <input type="text" id="localizacao" placeholder="Ex: Prateleira A - 01" class="input-optional">
                     </div>
 
                     <div class="form-group">
@@ -1010,6 +1018,18 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="edit-localizacao">Localização (Prateleira/Posição):</label>
+                    <input type="text" id="edit-localizacao" placeholder="Ex: Prateleira A - 01" class="input-optional">
+                </div>
+
+                <div class="form-group">
+                    <label>Histórico de Estoque:</label>
+                    <div id="edit-historico-estoque" style="background: #f9f9f9; border-radius: 5px; padding: 10px; max-height: 200px; overflow-y: auto; font-size: 0.9em;">
+                        <p style="color: #999; text-align: center; margin: 0;">Nenhuma movimentação registrada</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>Capa do Mangá:</label>
                     <div class="capa-input-group">
                         <input type="text" id="edit-capa-url" placeholder="Cole aqui o link da imagem" class="capa-input">
@@ -1045,6 +1065,7 @@
         let capasAtuais = [];
         let capasCache = {};
         let paginasCarregadas = {};
+        let historicoEstoque = {}; // Armazena histórico por ID do mangá
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -1211,10 +1232,13 @@
         function loadMangas() {
             const stored = localStorage.getItem('mangas');
             mangas = stored ? JSON.parse(stored) : [];
+            const storedHistorico = localStorage.getItem('historicoEstoque');
+            historicoEstoque = storedHistorico ? JSON.parse(storedHistorico) : {};
         }
 
         function saveMangas() {
             localStorage.setItem('mangas', JSON.stringify(mangas));
+            localStorage.setItem('historicoEstoque', JSON.stringify(historicoEstoque));
         }
 
         function addManga(e) {
@@ -1225,6 +1249,7 @@
             const autor = document.getElementById('autor').value.trim();
             const volume = document.getElementById('volume').value.trim();
             const estoque = parseInt(document.getElementById('estoque').value) || 0;
+            const localizacao = document.getElementById('localizacao').value.trim();
 
             // Validate duplicate barcode
             if (mangas.some(m => m.codigo === codigo)) {
@@ -1232,22 +1257,31 @@
                 return;
             }
 
+            const id = Date.now();
             const manga = {
-                id: Date.now(),
+                id,
                 codigo,
                 nome,
                 autor,
                 volume,
                 estoque,
+                localizacao,
                 capa: document.getElementById('capa').value.trim(),
                 data: new Date().toLocaleDateString('pt-BR')
             };
 
             mangas.push(manga);
+            
+            // Registrar entrada inicial no histórico
+            if (estoque > 0) {
+                registrarMovimentacaoEstoque(id, estoque, 'entrada', 'Cadastro inicial');
+            }
+            
             saveMangas();
             renderMangas();
             document.getElementById('manga-form').reset();
             document.getElementById('estoque').value = '1';
+            document.getElementById('localizacao').value = '';
             document.getElementById('capa').value = '';
             document.getElementById('capa-url').value = '';
             document.getElementById('capa-file').value = '';
@@ -1274,6 +1308,7 @@
                         <div class="manga-code">📦 ${escapeHtml(manga.codigo)}</div>
                         ${manga.autor ? `<div class="manga-code">✍️ ${escapeHtml(manga.autor)}</div>` : ''}
                         ${manga.volume ? `<div class="manga-code">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
+                        ${manga.localizacao ? `<div class="manga-code">📍 ${escapeHtml(manga.localizacao)}</div>` : ''}
                         <div class="manga-code" style="color: ${manga.estoque > 0 ? '#4CAF50' : '#f44336'}; font-weight: 600;">📊 Estoque: ${manga.estoque || 0}</div>
                         <div class="manga-date">Adicionado: ${manga.data}</div>
                     </div>
@@ -1288,6 +1323,10 @@
         function deleteManga(id) {
             if (confirm('Tem certeza que deseja deletar este mangá?')) {
                 mangas = mangas.filter(m => m.id !== id);
+                // Limpar histórico de estoque
+                if (historicoEstoque[id]) {
+                    delete historicoEstoque[id];
+                }
                 saveMangas();
                 renderMangas();
                 showMessage('Mangá removido com sucesso!', 'success');
@@ -1303,6 +1342,7 @@
             document.getElementById('edit-autor').value = manga.autor || '';
             document.getElementById('edit-volume').value = manga.volume || '';
             document.getElementById('edit-estoque').value = manga.estoque || 1;
+            document.getElementById('edit-localizacao').value = manga.localizacao || '';
             document.getElementById('edit-capa').value = manga.capa || '';
 
             // Mostrar preview da capa se existir
@@ -1314,6 +1354,9 @@
             } else {
                 document.getElementById('preview-capa-edit').style.display = 'none';
             }
+
+            // Exibir histórico de estoque
+            exibirHistoricoEstoque(id);
 
             document.getElementById('editModal').style.display = 'block';
         }
@@ -1331,6 +1374,7 @@
             const autor = document.getElementById('edit-autor').value.trim();
             const volume = document.getElementById('edit-volume').value.trim();
             const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
+            const localizacao = document.getElementById('edit-localizacao').value.trim();
             const capa = document.getElementById('edit-capa').value.trim();
 
             // Check for duplicate code (excluding current manga)
@@ -1346,6 +1390,7 @@
                 autor,
                 volume,
                 estoque,
+                localizacao,
                 capa
             };
 
@@ -2508,6 +2553,47 @@
                 console.error('Erro Google Books (nome):', error);
                 return null;
             }
+        }
+
+        function registrarMovimentacaoEstoque(id, quantidade, tipo, motivo = '') {
+            if (!historicoEstoque[id]) {
+                historicoEstoque[id] = [];
+            }
+
+            const movimentacao = {
+                data: new Date().toLocaleString('pt-BR'),
+                tipo: tipo, // 'entrada' ou 'saida'
+                quantidade: quantidade,
+                motivo: motivo
+            };
+
+            historicoEstoque[id].push(movimentacao);
+            saveMangas();
+        }
+
+        function exibirHistoricoEstoque(id) {
+            const container = document.getElementById('edit-historico-estoque');
+            const historico = historicoEstoque[id] || [];
+
+            if (historico.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Nenhuma movimentação registrada</p>';
+                return;
+            }
+
+            let html = '';
+            historico.forEach(mov => {
+                const icone = mov.tipo === 'entrada' ? '📥' : '📤';
+                const cor = mov.tipo === 'entrada' ? '#4CAF50' : '#FF9800';
+                html += `
+                    <div style="border-bottom: 1px solid #e0e0e0; padding: 8px 0;">
+                        <div style="font-weight: 600; color: ${cor};">${icone} ${mov.tipo === 'entrada' ? 'Entrada' : 'Saída'}: ${mov.quantidade} unidades</div>
+                        <div style="color: #666; font-size: 0.85em;">${mov.data}</div>
+                        ${mov.motivo ? `<div style="color: #999; font-size: 0.85em;">${escapeHtml(mov.motivo)}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
     </script>
 </body>
