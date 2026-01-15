@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Mangás</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-group button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .search-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-info {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .manga-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .manga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .manga-cover {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4em;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .manga-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .manga-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .manga-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .manga-details {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .manga-code {
+            color: #999;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .manga-location {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: auto;
+            font-size: 1em;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .empty-state h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .empty-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .no-location {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .search-group {
+                flex-direction: column;
+            }
+
+            .search-group button {
+                width: 100%;
+            }
+
+            .results-container {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .manga-cover {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Voltar para Gerenciamento</a>
+
+        <div class="header">
+            <h1>🔍 Buscar Mangás</h1>
+            <p>Procure por nome ou código de barras</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-group">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Digite o nome do mangá ou código de barras..."
+                    autocomplete="off"
+                >
+                <button onclick="buscarManga()">🔍 Buscar</button>
+            </div>
+            <div class="search-info" id="search-info">Digite algo para começar a busca</div>
+        </div>
+
+        <div id="results-container"></div>
+    </div>
+
+    <script>
+        let todosMangos = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarMangos();
+            
+            // Permitir busca com Enter
+            document.getElementById('search-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    buscarManga();
+                }
+            });
+
+            // Busca em tempo real
+            document.getElementById('search-input').addEventListener('input', () => {
+                const query = document.getElementById('search-input').value.trim();
+                if (query.length >= 2) {
+                    buscarManga();
+                } else if (query.length === 0) {
+                    document.getElementById('results-container').innerHTML = '';
+                    document.getElementById('search-info').textContent = 'Digite algo para começar a busca';
+                }
+            });
+        });
+
+        function carregarMangos() {
+            const stored = localStorage.getItem('mangas');
+            todosMangos = stored ? JSON.parse(stored) : [];
+        }
+
+        function buscarManga() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const container = document.getElementById('results-container');
+            const infoDiv = document.getElementById('search-info');
+
+            if (!query) {
+                container.innerHTML = '';
+                infoDiv.textContent = 'Digite algo para começar a busca';
+                return;
+            }
+
+            // Buscar por nome ou código
+            const resultados = todosMangos.filter(manga => {
+                const nomeMatch = manga.nome.toLowerCase().includes(query);
+                const codigoMatch = manga.codigo.toLowerCase().includes(query);
+                return nomeMatch || codigoMatch;
+            });
+
+            if (resultados.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <h2>Nenhum mangá encontrado</h2>
+                        <p>Tente buscar com outros termos</p>
+                    </div>
+                `;
+                infoDiv.textContent = `Nenhum resultado para "${query}"`;
+                return;
+            }
+
+            infoDiv.textContent = `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''} encontrado${resultados.length !== 1 ? 's' : ''}`;
+
+            container.innerHTML = resultados.map(manga => `
+                <div class="manga-card">
+                    <div class="manga-cover">
+                        ${manga.capa ? `<img src="${escapeHtml(manga.capa)}" alt="${escapeHtml(manga.nome)}" onerror="this.parentElement.textContent='📚'">` : '📚'}
+                    </div>
+                    <div class="manga-info">
+                        <div class="manga-name">${escapeHtml(manga.nome)}</div>
+                        
+                        ${manga.autor ? `<div class="manga-details">✍️ <strong>${escapeHtml(manga.autor)}</strong></div>` : ''}
+                        
+                        ${manga.volume ? `<div class="manga-details">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
+                        
+                        <div class="manga-code">COD: ${escapeHtml(manga.codigo)}</div>
+                        
+                        ${manga.localizacao ? `
+                            <div class="manga-location">
+                                📍 ${escapeHtml(manga.localizacao)}
+                            </div>
+                        ` : `
+                            <div class="manga-location no-location">
+                                Localização não informada
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

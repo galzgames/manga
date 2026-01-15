@@ -888,9 +888,6 @@
         <div class="header">
             <h1>📚 Gestão de Mangás</h1>
             <p>Organize sua coleção de mangás com facilidade</p>
-            <div style="margin-top: 15px;">
-                <a href="buscar.html" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 5px; display: inline-block; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🔍 Página de Busca para Clientes</a>
-            </div>
         </div>
 
         <div id="message-container"></div>
@@ -1308,7 +1305,6 @@
                         <div class="manga-code">📦 ${escapeHtml(manga.codigo)}</div>
                         ${manga.autor ? `<div class="manga-code">✍️ ${escapeHtml(manga.autor)}</div>` : ''}
                         ${manga.volume ? `<div class="manga-code">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
-                        ${manga.localizacao ? `<div class="manga-code">📍 ${escapeHtml(manga.localizacao)}</div>` : ''}
                         <div class="manga-code" style="color: ${manga.estoque > 0 ? '#4CAF50' : '#f44336'}; font-weight: 600;">📊 Estoque: ${manga.estoque || 0}</div>
                         <div class="manga-date">Adicionado: ${manga.data}</div>
                     </div>
@@ -2553,47 +2549,6 @@
                 console.error('Erro Google Books (nome):', error);
                 return null;
             }
-        }
-
-        function registrarMovimentacaoEstoque(id, quantidade, tipo, motivo = '') {
-            if (!historicoEstoque[id]) {
-                historicoEstoque[id] = [];
-            }
-
-            const movimentacao = {
-                data: new Date().toLocaleString('pt-BR'),
-                tipo: tipo, // 'entrada' ou 'saida'
-                quantidade: quantidade,
-                motivo: motivo
-            };
-
-            historicoEstoque[id].push(movimentacao);
-            saveMangas();
-        }
-
-        function exibirHistoricoEstoque(id) {
-            const container = document.getElementById('edit-historico-estoque');
-            const historico = historicoEstoque[id] || [];
-
-            if (historico.length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Nenhuma movimentação registrada</p>';
-                return;
-            }
-
-            let html = '';
-            historico.forEach(mov => {
-                const icone = mov.tipo === 'entrada' ? '📥' : '📤';
-                const cor = mov.tipo === 'entrada' ? '#4CAF50' : '#FF9800';
-                html += `
-                    <div style="border-bottom: 1px solid #e0e0e0; padding: 8px 0;">
-                        <div style="font-weight: 600; color: ${cor};">${icone} ${mov.tipo === 'entrada' ? 'Entrada' : 'Saída'}: ${mov.quantidade} unidades</div>
-                        <div style="color: #666; font-size: 0.85em;">${mov.data}</div>
-                        ${mov.motivo ? `<div style="color: #999; font-size: 0.85em;">${escapeHtml(mov.motivo)}</div>` : ''}
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
         }
     </script>
 </body>
