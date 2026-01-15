@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
-            padding: 20px;
+            padding: 12px;
         }
 
         .container {
@@ -25,13 +25,14 @@
 
         .nav-bar {
             background: white;
-            padding: 15px 25px;
+            padding: 10px 15px;
             border-radius: 8px;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.9em;
         }
 
         .back-link {
@@ -51,18 +52,18 @@
 
         .header {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 15px;
         }
 
         .header h1 {
-            font-size: 2.8em;
+            font-size: 1.6em;
             color: #1a1a2e;
-            margin-bottom: 8px;
+            margin-bottom: 3px;
             font-weight: 700;
         }
 
         .header p {
-            font-size: 1.1em;
+            font-size: 0.85em;
             color: #667eea;
             font-weight: 500;
         }
@@ -71,23 +72,23 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
-            padding: 35px;
-            margin-bottom: 35px;
+            padding: 15px;
+            margin-bottom: 15px;
             border-left: 5px solid #667eea;
         }
 
         .search-group {
             display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 6px;
+            margin-bottom: 8px;
         }
 
         .search-group input {
             flex: 1;
-            padding: 14px 18px;
+            padding: 8px 10px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
+            border-radius: 6px;
+            font-size: 0.9em;
             transition: all 0.3s;
             font-family: 'Segoe UI', sans-serif;
         }
@@ -100,13 +101,13 @@
         }
 
         .search-group button {
-            padding: 14px 28px;
+            padding: 8px 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
-            font-size: 1em;
+            font-size: 0.9em;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
@@ -123,49 +124,49 @@
 
         .search-info {
             color: #667eea;
-            font-size: 0.95em;
+            font-size: 0.85em;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .results-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .manga-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             border: 1px solid #f0f0f0;
+            height: 140px;
         }
 
         .manga-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
             border-color: #667eea;
         }
 
         .manga-cover {
-            width: 100%;
-            aspect-ratio: 3/4;
+            width: 100px;
+            min-width: 100px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 3.5em;
+            font-size: 2em;
             overflow: hidden;
             position: relative;
-            border-bottom: 3px solid #f0f0f0;
         }
 
         .manga-cover img {
@@ -173,55 +174,68 @@
             height: 100%;
             object-fit: contain;
             object-position: center;
-            padding: 8px;
+            padding: 4px;
             background: white;
         }
 
         .manga-info {
-            padding: 18px;
+            padding: 10px 12px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 4px;
+            justify-content: space-between;
         }
 
         .manga-name {
-            font-size: 1.05em;
+            font-size: 0.9em;
             font-weight: 700;
             color: #1a1a2e;
-            line-height: 1.35;
-            min-height: 2.7em;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         .manga-details {
-            color: #555;
-            font-size: 0.9em;
+            color: #666;
+            font-size: 0.8em;
             display: flex;
             align-items: center;
-            gap: 8px;
-            line-height: 1.3;
+            gap: 4px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .manga-code {
             color: #999;
-            font-size: 0.82em;
+            font-size: 0.7em;
             font-family: 'Courier New', monospace;
-            padding: 8px;
+            padding: 4px 6px;
             background: #f9f9f9;
-            border-radius: 5px;
+            border-radius: 3px;
             word-break: break-all;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .manga-location {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 6px;
+            border-radius: 4px;
             font-weight: 600;
             text-align: center;
-            margin-top: auto;
-            font-size: 0.95em;
+            font-size: 0.8em;
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .no-location {
@@ -258,31 +272,32 @@
 
         .filter-section {
             background: white;
-            padding: 20px 25px;
+            padding: 10px 12px;
             border-radius: 8px;
-            margin-bottom: 25px;
+            margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 8px;
         }
 
         .filter-info {
             color: #667eea;
             font-weight: 600;
-            font-size: 1em;
+            font-size: 0.85em;
         }
 
         .clear-search {
             background: none;
             border: 2px solid #e0e0e0;
             color: #667eea;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 0.8em;
             transition: all 0.3s;
         }
 
