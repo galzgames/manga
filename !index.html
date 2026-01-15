@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Mangás</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-card, .list-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+        }
+
+        .form-card h2, .list-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-content .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .capa-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .capa-input {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .capa-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-remover-capa {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn-remover-capa:hover {
+            background: #da190b;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .search-group {
+            margin-bottom: 20px;
+        }
+
+        .search-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .manga-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .manga-item {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .manga-item:hover {
+            background: #f0f0f0;
+        }
+
+        .manga-info {
+            flex: 1;
+        }
+
+        .manga-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+            margin-bottom: 3px;
+        }
+
+        .manga-code {
+            color: #667eea;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .manga-date {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+
+        .manga-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-edit {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-edit:hover, .btn-delete:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #667eea;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .manga-actions {
+                flex-direction: column;
+            }
+        }
+
+        .scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f0f0f0;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .manga-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .manga-cover {
+            width: 120px;
+            height: 160px;
+            border-radius: 8px;
+            background: #e0e0e0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            flex-shrink: 0;
+        }
+
+        .manga-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .manga-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .btn-search-cover {
+            background: #2196F3;
+            color: white;
+            padding: 6px 12px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .btn-search-cover:hover {
+            transform: scale(1.05);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .form-group.cover-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .form-group.cover-group input {
+            margin-bottom: 0;
+        }
+
+        .form-group.cover-group button {
+            padding: 10px 12px;
+            margin: 0;
+            background: #2196F3;
+            color: white;
+            height: fit-content;
+        }
+
+        .form-group.cover-group button {
+            padding: 10px 12px;
+            margin: 0;
+            background: #2196F3;
+            color: white;
+            height: fit-content;
+        }
+
+        .preview-cover {
+            width: 100px;
+            height: 140px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mercado-livre-info {
+            background: linear-gradient(135deg, #fff159 0%, #ffd54f 100%);
+            border-left: 4px solid #fbc02d;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .mercado-livre-info.show {
+            display: block;
+        }
+
+        .ml-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ml-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-left: 3px solid #fbc02d;
+        }
+
+        .ml-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .ml-price {
+            color: #fbc02d;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .ml-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .mercado-livre-info.show {
+            display: block;
+        }
+
+        .scanner-section {
+            display: none;
+        }
+
+        .scanner-section h3 {
+            display: none;
+        }
+
+        .scanner-buttons {
+            display: none;
+        }
+
+        .btn-scanner {
+            display: none;
+        }
+
+        #scanner-video {
+            display: none;
+        }
+
+        .scanner-status {
+            display: none;
+        }
+
+        .scanner-status.success {
+            display: none;
+        }
+
+        .scanner-status.error {
+            display: none;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        #file-name {
+            display: none;
+        }
+
+        .modal-capas {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            overflow-y: auto;
+        }
+
+        .modal-capas-content {
+            background-color: white;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-capas-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .capas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .capa-option {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 3px solid #e0e0e0;
+            transition: all 0.3s;
+            position: relative;
+            height: 220px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .capa-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .capa-fonte {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 0.75em;
+            text-align: center;
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        .capa-option:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .capa-option.selected {
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .capa-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .capas-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .capas-modal-buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .capas-modal-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .capa-manual-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .capa-manual-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .capa-manual-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .capa-manual-options .form-group {
+            margin-bottom: 0;
+        }
+
+        .capa-manual-options label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .capa-manual-options input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        .capa-manual-options input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        #btn-adicionar-capa-manual {
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+
+        #btn-adicionar-capa-manual:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        #btn-adicionar-capa-manual:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-confirmar-capa {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-cancelar-capas {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .capas-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .capas-loading .loading {
+            margin-bottom: 15px;
+        }
+
+        .btn-carregar-mais {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn-carregar-mais:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-carregar-mais:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .capas-container-wrapper {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Gestão de Mangás</h1>
+            <p>Organize sua coleção de mangás com facilidade</p>
+        </div>
+
+        <div id="message-container"></div>
+
+        <div class="main-content">
+            <!-- Form Section -->
+            <div class="form-card">
+                <h2>Adicionar Mangá</h2>
+
+                <form id="manga-form">
+                    <div class="form-group">
+                        <label for="codigo">Código de Barras:</label>
+                        <div class="cover-group">
+                            <input type="text" id="codigo" placeholder="Digite o código de barras (ISBN)" required>
+                            <button type="button" id="btn-buscar-codigo" class="btn-search-cover">🔍 Buscar</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nome">Nome do Mangá:</label>
+                        <input type="text" id="nome" placeholder="Digite o nome do mangá" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="autor">Autor (opcional):</label>
+                        <input type="text" id="autor" placeholder="Nome do autor">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volume">Volume (opcional):</label>
+                        <input type="text" id="volume" placeholder="Número do volume">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estoque">Quantidade em Estoque:</label>
+                        <input type="number" id="estoque" placeholder="Digite a quantidade" value="1" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Adicionar Capa:</label>
+                        <div class="capa-input-group">
+                            <input type="text" id="capa-url" placeholder="Cole aqui o link da imagem" class="capa-input">
+                            <input type="file" id="capa-file" accept="image/*" class="capa-input">
+                        </div>
+                        <div class="preview-cover" id="preview-capa" style="display: none;">
+                            <img id="preview-img" src="" alt="Capa">
+                            <button type="button" id="btn-remover-capa" class="btn-remover-capa">✕ Remover</button>
+                        </div>
+                        <input type="hidden" id="capa">
+                    </div>
+
+                    <div class="mercado-livre-info" id="ml-info">
+                        <div class="ml-header">💰 Encontrado no Mercado Livre</div>
+                        <div id="ml-items"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-add">➕ Adicionar</button>
+                        <button type="reset" class="btn-clear">🔄 Limpar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- List Section -->
+            <div class="list-card">
+                <h2>Meus Mangás</h2>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <h3 id="total-count">0</h3>
+                        <p>Total</p>
+                    </div>
+                </div>
+
+                <div class="search-group">
+                    <input type="text" id="search" placeholder="🔍 Buscar por nome ou código...">
+                </div>
+
+                <div class="manga-list scrollbar" id="manga-list">
+                    <div class="empty-state">
+                        <p>Nenhum mangá cadastrado ainda.<br>Comece adicionando um!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>✏️ Editar Mangá</h2>
+            <form id="edit-form">
+                <div class="form-group">
+                    <label for="edit-codigo">Código de Barras:</label>
+                    <div class="cover-group">
+                        <input type="text" id="edit-codigo" required>
+                        <button type="button" id="btn-buscar-codigo-edit" class="btn-search-cover">🔍 Buscar</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-nome">Nome do Mangá:</label>
+                    <input type="text" id="edit-nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-autor">Autor:</label>
+                    <input type="text" id="edit-autor" placeholder="(opcional)">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-volume">Volume:</label>
+                    <input type="text" id="edit-volume" placeholder="(opcional)">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-estoque">Quantidade em Estoque:</label>
+                    <input type="number" id="edit-estoque" value="1" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Capa do Mangá:</label>
+                    <div class="capa-input-group">
+                        <input type="text" id="edit-capa-url" placeholder="Cole aqui o link da imagem" class="capa-input">
+                        <input type="file" id="edit-capa-file" accept="image/*" class="capa-input">
+                    </div>
+                    <div class="preview-cover" id="preview-capa-edit" style="display: none;">
+                        <img id="preview-img-edit" src="" alt="Capa">
+                        <button type="button" id="btn-remover-capa-edit" class="btn-remover-capa">✕ Remover</button>
+                    </div>
+                    <input type="hidden" id="edit-capa">
+                </div>
+
+                <div class="mercado-livre-info" id="ml-info-edit">
+                    <div class="ml-header">💰 Encontrado no Mercado Livre</div>
+                    <div id="ml-items-edit"></div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save">💾 Salvar Alterações</button>
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let mangas = [];
+        let editingIndex = -1;
+        let html5QrcodeScanner = null;
+        let cameraActive = false;
+        let selectedCapaUrl = null;
+        let currentCapaTipo = null;
+        let capasAtuais = [];
+        let capasCache = {};
+        let paginasCarregadas = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMangas();
+            renderMangas();
+            setupEventListeners();
+            setupScannerListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('manga-form').addEventListener('submit', addManga);
+            document.getElementById('search').addEventListener('input', handleSearch);
+            document.querySelector('.close').addEventListener('click', closeEditModal);
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('editModal');
+                if (e.target === modal) closeEditModal();
+            });
+
+            // Auto-buscar ao digitar código de barras
+            let debounceTimer;
+            document.getElementById('codigo').addEventListener('blur', (e) => {
+                const codigo = e.target.value.trim();
+                if (codigo.length >= 10) { // ISBN tem pelo menos 10 dígitos
+                    buscarPorCodigoDeBarras(codigo, 'add', true);
+                }
+            });
+
+            // Auto-buscar ao digitar código de barras no modal de edição
+            document.getElementById('edit-codigo').addEventListener('blur', (e) => {
+                const codigo = e.target.value.trim();
+                if (codigo.length >= 10) {
+                    buscarPorCodigoDeBarras(codigo, 'edit', true);
+                }
+            });
+
+            // Busca em tempo real ao digitar o código (com debounce)
+            document.getElementById('codigo').addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                const codigo = e.target.value.trim();
+                
+                if (codigo.length >= 10) {
+                    // Mostrar indicador de busca
+                    const infoBox = document.getElementById('ml-info');
+                    infoBox.classList.remove('show');
+                    
+                    debounceTimer = setTimeout(() => {
+                        buscarPorCodigoDeBarras(codigo, 'add', true);
+                    }, 800);
+                }
+            });
+
+            // Busca em tempo real ao digitar o código no modal (com debounce)
+            document.getElementById('edit-codigo').addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                const codigo = e.target.value.trim();
+                
+                if (codigo.length >= 10) {
+                    const infoBox = document.getElementById('ml-info-edit');
+                    infoBox.classList.remove('show');
+                    
+                    debounceTimer = setTimeout(() => {
+                        buscarPorCodigoDeBarras(codigo, 'edit', true);
+                    }, 800);
+                }
+            });
+
+            // Auto-buscar ao digitar nome do mangá
+            document.getElementById('nome').addEventListener('blur', (e) => {
+                const nome = e.target.value.trim();
+                const codigo = document.getElementById('codigo').value.trim();
+                // Só busca por nome se não tiver código válido
+                if (nome.length >= 3 && codigo.length < 10) {
+                    buscarPorNomeManga(nome, 'add', true);
+                }
+            });
+
+            // Auto-buscar ao digitar nome do mangá no modal de edição
+            document.getElementById('edit-nome').addEventListener('blur', (e) => {
+                const nome = e.target.value.trim();
+                const codigo = document.getElementById('edit-codigo').value.trim();
+                // Só busca por nome se não tiver código válido
+                if (nome.length >= 3 && codigo.length < 10) {
+                    buscarPorNomeManga(nome, 'edit', true);
+                }
+            });
+
+            // Event listeners para capa manual - adicionar
+            document.getElementById('capa-url').addEventListener('change', () => {
+                const url = document.getElementById('capa-url').value.trim();
+                if (url) {
+                    const img = document.getElementById('preview-img');
+                    img.src = url;
+                    img.onload = () => {
+                        document.getElementById('preview-capa').style.display = 'flex';
+                    };
+                    img.onerror = () => {
+                        document.getElementById('preview-capa').style.display = 'none';
+                        showMessage('Erro ao carregar a imagem. Verifique o URL.', 'error');
+                    };
+                }
+            });
+
+            document.getElementById('capa-file').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = document.getElementById('preview-img');
+                        img.src = event.target.result;
+                        document.getElementById('preview-capa').style.display = 'flex';
+                        document.getElementById('capa').value = event.target.result;
+                        document.getElementById('capa-url').value = '';
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            document.getElementById('btn-remover-capa').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('capa-url').value = '';
+                document.getElementById('capa-file').value = '';
+                document.getElementById('capa').value = '';
+                document.getElementById('preview-capa').style.display = 'none';
+            });
+
+            // Event listeners para capa manual - editar
+            document.getElementById('edit-capa-url').addEventListener('change', () => {
+                const url = document.getElementById('edit-capa-url').value.trim();
+                if (url) {
+                    const img = document.getElementById('preview-img-edit');
+                    img.src = url;
+                    img.onload = () => {
+                        document.getElementById('preview-capa-edit').style.display = 'flex';
+                    };
+                    img.onerror = () => {
+                        document.getElementById('preview-capa-edit').style.display = 'none';
+                        showMessage('Erro ao carregar a imagem. Verifique o URL.', 'error');
+                    };
+                }
+            });
+
+            document.getElementById('edit-capa-file').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = document.getElementById('preview-img-edit');
+                        img.src = event.target.result;
+                        document.getElementById('preview-capa-edit').style.display = 'flex';
+                        document.getElementById('edit-capa').value = event.target.result;
+                        document.getElementById('edit-capa-url').value = '';
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            document.getElementById('btn-remover-capa-edit').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('edit-capa-url').value = '';
+                document.getElementById('edit-capa-file').value = '';
+                document.getElementById('edit-capa').value = '';
+                document.getElementById('preview-capa-edit').style.display = 'none';
+            });
+        }
+
+        function loadMangas() {
+            const stored = localStorage.getItem('mangas');
+            mangas = stored ? JSON.parse(stored) : [];
+        }
+
+        function saveMangas() {
+            localStorage.setItem('mangas', JSON.stringify(mangas));
+        }
+
+        function addManga(e) {
+            e.preventDefault();
+
+            const codigo = document.getElementById('codigo').value.trim();
+            const nome = document.getElementById('nome').value.trim();
+            const autor = document.getElementById('autor').value.trim();
+            const volume = document.getElementById('volume').value.trim();
+            const estoque = parseInt(document.getElementById('estoque').value) || 0;
+
+            // Validate duplicate barcode
+            if (mangas.some(m => m.codigo === codigo)) {
+                showMessage('Este código de barras já está cadastrado!', 'error');
+                return;
+            }
+
+            const manga = {
+                id: Date.now(),
+                codigo,
+                nome,
+                autor,
+                volume,
+                estoque,
+                capa: document.getElementById('capa').value.trim(),
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+
+            mangas.push(manga);
+            saveMangas();
+            renderMangas();
+            document.getElementById('manga-form').reset();
+            document.getElementById('estoque').value = '1';
+            document.getElementById('capa').value = '';
+            document.getElementById('capa-url').value = '';
+            document.getElementById('capa-file').value = '';
+            document.getElementById('preview-capa').style.display = 'none';
+            showMessage('Mangá adicionado com sucesso!', 'success');
+        }
+
+        function renderMangas(toRender = mangas) {
+            const list = document.getElementById('manga-list');
+            document.getElementById('total-count').textContent = mangas.length;
+
+            if (toRender.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>Nenhum mangá encontrado.</p></div>';
+                return;
+            }
+
+            list.innerHTML = toRender.map((manga, index) => `
+                <div class="manga-item">
+                    <div class="manga-cover">
+                        ${manga.capa ? `<img src="${escapeHtml(manga.capa)}" alt="${escapeHtml(manga.nome)}" onerror="this.parentElement.textContent='📚'">` : '📚'}
+                    </div>
+                    <div class="manga-info">
+                        <div class="manga-name">${escapeHtml(manga.nome)}</div>
+                        <div class="manga-code">📦 ${escapeHtml(manga.codigo)}</div>
+                        ${manga.autor ? `<div class="manga-code">✍️ ${escapeHtml(manga.autor)}</div>` : ''}
+                        ${manga.volume ? `<div class="manga-code">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
+                        <div class="manga-code" style="color: ${manga.estoque > 0 ? '#4CAF50' : '#f44336'}; font-weight: 600;">📊 Estoque: ${manga.estoque || 0}</div>
+                        <div class="manga-date">Adicionado: ${manga.data}</div>
+                    </div>
+                    <div class="manga-actions">
+                        <button class="btn-edit" onclick="openEditModal(${manga.id})">✏️ Editar</button>
+                        <button class="btn-delete" onclick="deleteManga(${manga.id})">🗑️ Deletar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteManga(id) {
+            if (confirm('Tem certeza que deseja deletar este mangá?')) {
+                mangas = mangas.filter(m => m.id !== id);
+                saveMangas();
+                renderMangas();
+                showMessage('Mangá removido com sucesso!', 'success');
+            }
+        }
+
+        function openEditModal(id) {
+            editingIndex = mangas.findIndex(m => m.id === id);
+            const manga = mangas[editingIndex];
+
+            document.getElementById('edit-codigo').value = manga.codigo;
+            document.getElementById('edit-nome').value = manga.nome;
+            document.getElementById('edit-autor').value = manga.autor || '';
+            document.getElementById('edit-volume').value = manga.volume || '';
+            document.getElementById('edit-estoque').value = manga.estoque || 1;
+            document.getElementById('edit-capa').value = manga.capa || '';
+
+            // Mostrar preview da capa se existir
+            if (manga.capa) {
+                const preview = document.getElementById('preview-capa-edit');
+                const img = document.getElementById('preview-img-edit');
+                img.src = manga.capa;
+                preview.style.display = 'flex';
+            } else {
+                document.getElementById('preview-capa-edit').style.display = 'none';
+            }
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            editingIndex = -1;
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const codigo = document.getElementById('edit-codigo').value.trim();
+            const nome = document.getElementById('edit-nome').value.trim();
+            const autor = document.getElementById('edit-autor').value.trim();
+            const volume = document.getElementById('edit-volume').value.trim();
+            const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
+            const capa = document.getElementById('edit-capa').value.trim();
+
+            // Check for duplicate code (excluding current manga)
+            if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
+                showMessage('Este código de barras já está cadastrado!', 'error');
+                return;
+            }
+
+            mangas[editingIndex] = {
+                ...mangas[editingIndex],
+                codigo,
+                nome,
+                autor,
+                volume,
+                estoque,
+                capa
+            };
+
+            saveMangas();
+            renderMangas();
+            closeEditModal();
+            showMessage('Mangá atualizado com sucesso!', 'success');
+        });
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = mangas.filter(manga =>
+                manga.nome.toLowerCase().includes(query) ||
+                manga.codigo.toLowerCase().includes(query)
+            );
+            renderMangas(filtered);
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('message-container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.appendChild(message);
+
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Buscar capa automaticamente
+        document.getElementById('btn-buscar-capa').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value.trim();
+            
+            if (!nome) {
+                showMessage('Digite o nome do mangá primeiro!', 'error');
+                return;
+            }
+
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                currentCapaTipo = 'add';
+                await buscarMultiplasCapas(nome, 'add');
+            } catch (error) {
+                showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        document.getElementById('btn-buscar-capa-edit').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('edit-nome').value.trim();
+            
+            if (!nome) {
+                showMessage('Digite o nome do mangá primeiro!', 'error');
+                return;
+            }
+
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                currentCapaTipo = 'edit';
+                await buscarMultiplasCapas(nome, 'edit');
+            } catch (error) {
+                showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        async function buscarMultiplasCapas(nomeManga, tipo) {
+            try {
+                const container = document.getElementById('capas-container');
+                container.innerHTML = '<div class="capas-loading"><div class="loading"></div>Buscando capas na internet...</div>';
+                
+                const modal = document.getElementById('modalCapas');
+                modal.style.display = 'block';
+
+                // Definir o tipo atual
+                currentCapaTipo = tipo;
+
+                // Resetar cache
+                capasCache = {};
+                paginasCarregadas = {
+                    unsplash: 1,
+                    pixabay: 1,
+                    myanimelist: 1,
+                    mangadex: 1
+                };
+
+                let capas = await buscarCapasOtimizadas(nomeManga, 10);
+
+                if (capas.length === 0) {
+                    container.innerHTML = '<div class="capas-loading">❌ Nenhuma capa encontrada. Tente novamente com outro nome.</div>';
+                    document.getElementById('btn-carregar-mais').style.display = 'none';
+                    return;
+                }
+
+                capasAtuais = capas;
+                exibirCapasParaSeleção(capas, tipo);
+                
+                // Mostrar botão de carregar mais se houver possibilidade
+                document.getElementById('btn-carregar-mais').style.display = 'block';
+                document.getElementById('btn-carregar-mais').disabled = false;
+            } catch (error) {
+                console.error('Erro ao buscar múltiplas capas:', error);
+                document.getElementById('capas-container').innerHTML = '<div class="capas-loading">❌ Erro ao buscar capas.</div>';
+            }
+        }
+
+        async function buscarCapasOtimizadas(nomeManga, limite) {
+            let capas = [];
+
+            // Buscar capas de múltiplas fontes (mais capas para ter opção)
+            const unsplash = await buscarCapasUnsplash(nomeManga, 10);
+            const pixabay = await buscarCapasPixabay(nomeManga, 10);
+            const myanimelist = await buscarCapasMyAnimeList(nomeManga, 10);
+            const mangadex = await buscarCapasMangaDex(nomeManga, 10);
+
+            capas = capas.concat(unsplash);
+            capas = capas.concat(pixabay);
+            capas = capas.concat(myanimelist);
+            capas = capas.concat(mangadex);
+
+            // Remover duplicatas baseado na URL
+            capas = [...new Map(capas.map(c => [c.url, c])).values()];
+
+            // Pegar apenas o limite solicitado
+            return capas.slice(0, limite);
+        }
+
+        async function carregarMaisCapas() {
+            const container = document.getElementById('capas-container');
+            const btn = document.getElementById('btn-carregar-mais');
+            const nomeManga = btn.getAttribute('data-manga');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Carregando...';
+
+            try {
+                // Buscar próximas páginas
+                let novasCapas = [];
+
+                // Incrementar páginas
+                paginasCarregadas.unsplash++;
+                paginasCarregadas.pixabay++;
+                paginasCarregadas.myanimelist++;
+                paginasCarregadas.mangadex++;
+
+                novasCapas = novasCapas.concat(await buscarCapasUnsplash(nomeManga, 10, paginasCarregadas.unsplash));
+                novasCapas = novasCapas.concat(await buscarCapasPixabay(nomeManga, 10, paginasCarregadas.pixabay));
+                novasCapas = novasCapas.concat(await buscarCapasMyAnimeList(nomeManga, 10, paginasCarregadas.myanimelist));
+                novasCapas = novasCapas.concat(await buscarCapasMangaDex(nomeManga, 10, paginasCarregadas.mangadex));
+
+                // Remover duplicatas
+                novasCapas = [...new Map(novasCapas.map(c => [c.url, c])).values()];
+                
+                // Filtrar capas já exibidas
+                const urlsExibidas = new Set(capasAtuais.map(c => c.url));
+                novasCapas = novasCapas.filter(c => !urlsExibidas.has(c.url));
+
+                if (novasCapas.length === 0) {
+                    showMessage('Não há mais capas para carregar', 'error');
+                    btn.disabled = true;
+                    btn.textContent = '✓ Todas as capas carregadas';
+                    return;
+                }
+
+                // Adicionar novas capas
+                capasAtuais = capasAtuais.concat(novasCapas);
+                adicionarCapasAoGrid(novasCapas);
+
+                btn.disabled = false;
+                btn.textContent = '↓ Carregar mais capas';
+            } catch (error) {
+                console.error('Erro ao carregar mais capas:', error);
+                showMessage('Erro ao carregar mais capas', 'error');
+                btn.disabled = false;
+                btn.textContent = '↓ Carregar mais capas';
+            }
+        }
+
+        function adicionarCapasAoGrid(novasCapas) {
+            const gridExistente = document.querySelector('.capas-grid');
+            
+            novasCapas.forEach((capa, index) => {
+                const novoDiv = document.createElement('div');
+                novoDiv.className = 'capa-option';
+                novoDiv.setAttribute('data-url', capa.url);
+                novoDiv.setAttribute('data-fonte', capa.fonte);
+                novoDiv.setAttribute('data-tipo', currentCapaTipo);
+                novoDiv.onclick = function() { selecionarCapa(this); };
+                novoDiv.innerHTML = `<img src="${escapeHtml(capa.url)}" alt="Opção" onerror="this.style.display='none'"><div class="capa-fonte">${capa.fonte}</div>`;
+                gridExistente.appendChild(novoDiv);
+            });
+        }
+
+        async function buscarCapasUnsplash(nomeManga, limite = 5, pagina = 1) {
+            try {
+                // Busca em português/Brasil no Google Books
+                const query = encodeURIComponent(nomeManga + ' manga');
+                const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}+inauthor:manga&maxResults=${limite}&startIndex=${(pagina-1)*limite}&langRestrict=pt`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.items && data.items.length > 0) {
+                        return data.items
+                            .filter(item => item.volumeInfo && item.volumeInfo.imageLinks && item.volumeInfo.imageLinks.thumbnail)
+                            .map(item => ({
+                                url: item.volumeInfo.imageLinks.thumbnail.replace('&edge=curl', ''),
+                                fonte: 'Google Books'
+                            }));
+                    }
+                }
+                return [];
+            } catch (error) {
+                console.error('Erro Google Books:', error);
+                return [];
+            }
+        }
+
+        async function buscarCapasPixabay(nomeManga, limite = 5, pagina = 1) {
+            try {
+                // Busca na Open Library - melhor cobertura de livros
+                const query = encodeURIComponent(nomeManga);
+                const response = await fetch(`https://openlibrary.org/search.json?title=${query}&language=pt&limit=${limite}&offset=${(pagina-1)*limite}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.docs && data.docs.length > 0) {
+                        return data.docs
+                            .filter(doc => doc.cover_i)
+                            .map(doc => ({
+                                url: `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`,
+                                fonte: 'Open Library'
+                            }));
+                    }
+                }
+                return [];
+            } catch (error) {
+                console.error('Erro Open Library:', error);
+                return [];
+            }
+        }
+
+        async function buscarCapasMyAnimeList(nomeManga, limite = 5, pagina = 1) {
+            try {
+                // Busca na API Skoob (comunidade brasileira de leitura)
+                const query = encodeURIComponent(nomeManga);
+                const response = await fetch(`https://www.skoob.com.br/api/v1/books/search?q=${query}&limit=${limite}&offset=${(pagina-1)*limite}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.books && data.books.length > 0) {
+                        return data.books
+                            .filter(book => book.cover)
+                            .map(book => ({
+                                url: book.cover,
+                                fonte: 'Skoob'
+                            }));
+                    }
+                }
+                return [];
+            } catch (error) {
+                console.error('Erro Skoob:', error);
+                return [];
+            }
+        }
+
+        async function buscarCapasMangaDex(nomeManga, limite = 5, pagina = 1) {
+            try {
+                // Busca em portais de mangás em português - usando estratégia de scraping de Google Images com proxy
+                const query = encodeURIComponent(nomeManga + ' manga capa');
+                // Usando uma API pública de busca de imagens
+                const response = await fetch(`https://api.bing.microsoft.com/v7.0/images/search?q=${query}&mkt=pt-BR&count=${limite}&offset=${(pagina-1)*limite}`, {
+                    headers: {
+                        'Ocp-Apim-Subscription-Key': ''
+                    }
+                }).catch(() => null);
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.value && data.value.length > 0) {
+                        return data.value
+                            .filter(img => img.contentUrl)
+                            .map(img => ({
+                                url: img.contentUrl,
+                                fonte: 'Busca Brasil'
+                            }));
+                    }
+                }
+                
+                // Fallback: busca direta em Mercado Livre Brasil
+                return await buscarCapasMercadoLivreBrasil(nomeManga, limite, pagina);
+            } catch (error) {
+                console.error('Erro busca Brasil:', error);
+                return await buscarCapasMercadoLivreBrasil(nomeManga, limite, pagina);
+            }
+        }
+
+        async function buscarCapasMercadoLivreBrasil(nomeManga, limite = 5, pagina = 1) {
+            try {
+                // Busca em Mercado Livre Brasil (tem muitos mangás com capas)
+                const query = encodeURIComponent(nomeManga);
+                const response = await fetch(`https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=${limite}&offset=${(pagina-1)*limite}&type=product`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        return data.results
+                            .filter(item => item.thumbnail)
+                            .map(item => ({
+                                url: item.thumbnail.replace('-I.jpg', '-O.jpg'), // Imagem maior
+                                fonte: 'Mercado Livre'
+                            }));
+                    }
+                }
+                return [];
+            } catch (error) {
+                console.error('Erro Mercado Livre:', error);
+                return [];
+            }
+        }
+
+        function exibirCapasParaSeleção(capas, tipo) {
+            const container = document.getElementById('capas-container');
+            let html = '<div class="capas-grid">';
+
+            capas.forEach((capa, index) => {
+                html += `
+                    <div class="capa-option" data-url="${escapeHtml(capa.url)}" data-fonte="${capa.fonte}" data-tipo="${tipo}" data-index="${index}" onclick="selecionarCapa(this)">
+                        <img src="${escapeHtml(capa.url)}" alt="Opção ${index + 1}" onerror="this.style.display='none'">
+                        <div class="capa-fonte">${capa.fonte}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+
+            // Guardar nome do mangá para carregar mais capas depois
+            const nomeMangaInput = tipo === 'add' ? 
+                document.getElementById('nome').value : 
+                document.getElementById('edit-nome').value;
+            document.getElementById('btn-carregar-mais').setAttribute('data-manga', nomeMangaInput);
+            document.getElementById('btn-carregar-mais').setAttribute('data-tipo', tipo);
+        }
+
+        function selecionarCapa(element) {
+            // Remover seleção anterior
+            document.querySelectorAll('.capa-option').forEach(el => el.classList.remove('selected'));
+            
+            // Adicionar seleção nova
+            element.classList.add('selected');
+            selectedCapaUrl = element.getAttribute('data-url');
+            const fonte = element.getAttribute('data-fonte');
+            const tipo = element.getAttribute('data-tipo');
+            
+            // Guardar o tipo para usar depois na confirmação
+            currentCapaTipo = tipo;
+            
+            // Mostrar preview
+            const imgId = tipo === 'add' ? 'preview-img' : 'preview-img-edit';
+            const previewId = tipo === 'add' ? 'preview-capa' : 'preview-capa-edit';
+            const fonteId = tipo === 'add' ? 'preview-fonte' : 'preview-fonte-edit';
+            
+            const img = document.getElementById(imgId);
+            const fonteEl = document.getElementById(fonteId);
+            
+            img.src = selectedCapaUrl;
+            if (fonteEl) {
+                fonteEl.textContent = `Fonte: ${fonte}`;
+            }
+            img.onload = () => {
+                document.getElementById(previewId).style.display = 'flex';
+            };
+        }
+
+        document.getElementById('btn-confirmar-capa').addEventListener('click', () => {
+            if (!selectedCapaUrl) {
+                showMessage('Selecione uma capa primeiro!', 'error');
+                return;
+            }
+
+            if (!currentCapaTipo) {
+                showMessage('Erro: tipo de formulário não identificado. Tente novamente.', 'error');
+                return;
+            }
+
+            const prefixo = currentCapaTipo === 'add' ? '' : 'edit-';
+            const inputCapa = document.getElementById(`${prefixo}capa`);
+            
+            if (!inputCapa) {
+                showMessage('Erro: campo de capa não encontrado.', 'error');
+                return;
+            }
+
+            inputCapa.value = selectedCapaUrl;
+
+            const previewId = currentCapaTipo === 'add' ? 'preview-capa' : 'preview-capa-edit';
+            const imgId = currentCapaTipo === 'add' ? 'preview-img' : 'preview-img-edit';
+            const fonteId = currentCapaTipo === 'add' ? 'preview-fonte' : 'preview-fonte-edit';
+            
+            const img = document.getElementById(imgId);
+            const fonteEl = document.getElementById(fonteId);
+            
+            img.src = selectedCapaUrl;
+            if (fonteEl) {
+                const fonte = document.querySelector('.capa-option.selected')?.getAttribute('data-fonte') || 'Selecionada';
+                fonteEl.textContent = `Fonte: ${fonte}`;
+            }
+            
+            img.onload = () => {
+                document.getElementById(previewId).style.display = 'flex';
+            };
+
+            fecharModalCapas();
+            showMessage('Capa selecionada com sucesso!', 'success');
+        });
+
+        document.getElementById('btn-cancelar-capas').addEventListener('click', fecharModalCapas);
+
+        // Event listener para adicionar capa manual via URL
+        document.getElementById('btn-adicionar-capa-manual').addEventListener('click', () => {
+            const urlInput = document.getElementById('capa-url-manual');
+            const fileInput = document.getElementById('capa-upload-manual');
+            const url = urlInput.value.trim();
+
+            if (url) {
+                // Usar URL fornecida
+                selecionarCapaManual(url);
+            } else if (fileInput.files.length > 0) {
+                // Usar arquivo enviado
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    selecionarCapaManual(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showMessage('Digite uma URL ou selecione um arquivo!', 'error');
+            }
+        });
+
+        // Event listener para preview de arquivo
+        document.getElementById('capa-upload-manual').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = document.getElementById('preview-img-manual');
+                    img.src = event.target.result;
+                    document.getElementById('preview-capa-manual').style.display = 'block';
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function selecionarCapaManual(url) {
+            selectedCapaUrl = url;
+            
+            // Adicionar à grade de capas
+            const container = document.getElementById('capas-container');
+            const capaManualDiv = document.getElementById('capa-manual-item');
+            
+            if (capaManualDiv) {
+                capaManualDiv.remove();
+            }
+
+            const newCapaDiv = document.createElement('div');
+            newCapaDiv.id = 'capa-manual-item';
+            newCapaDiv.className = 'capa-option selected';
+            newCapaDiv.setAttribute('data-url', url);
+            newCapaDiv.setAttribute('data-fonte', 'Manual');
+            newCapaDiv.innerHTML = `
+                <img src="${escapeHtml(url)}" alt="Capa Manual" onerror="this.style.display='none'">
+                <div class="capa-fonte">Manual ✓</div>
+            `;
+            
+            container.insertBefore(newCapaDiv, container.firstChild);
+
+            // Limpar campos
+            document.getElementById('capa-url-manual').value = '';
+            document.getElementById('capa-upload-manual').value = '';
+            document.getElementById('preview-capa-manual').style.display = 'none';
+
+            showMessage('Capa adicionada! Clique em Confirmar para salvar.', 'success');
+        }
+
+        function fecharModalCapas() {
+            document.getElementById('modalCapas').style.display = 'none';
+            selectedCapaUrl = null;
+            currentCapaTipo = null;
+            // Limpar campos de busca
+            document.getElementById('capa-busca').value = '';
+            document.getElementById('edit-capa-busca').value = '';
+            // Limpar campos de capa manual
+            document.getElementById('capa-url-manual').value = '';
+            document.getElementById('capa-upload-manual').value = '';
+            document.getElementById('preview-capa-manual').style.display = 'none';
+        }
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalCapas');
+            if (e.target === modal) {
+                fecharModalCapas();
+            }
+        });
+
+        // Adicionar listener do botão carregar mais
+        document.getElementById('btn-carregar-mais').addEventListener('click', carregarMaisCapas);
+
+        // Preview da capa quando digitar URL
+        document.getElementById('capa').addEventListener('change', () => {
+            const url = document.getElementById('capa').value.trim();
+            if (url) {
+                const img = document.getElementById('preview-img');
+                img.src = url;
+                img.onload = () => {
+                    document.getElementById('preview-capa').style.display = 'flex';
+                };
+                img.onerror = () => {
+                    document.getElementById('preview-capa').style.display = 'none';
+                };
+            } else {
+                document.getElementById('preview-capa').style.display = 'none';
+            }
+        });
+
+        document.getElementById('edit-capa').addEventListener('change', () => {
+            const url = document.getElementById('edit-capa').value.trim();
+            if (url) {
+                const img = document.getElementById('preview-img-edit');
+                img.src = url;
+                img.onload = () => {
+                    document.getElementById('preview-capa-edit').style.display = 'flex';
+                };
+                img.onerror = () => {
+                    document.getElementById('preview-capa-edit').style.display = 'none';
+                };
+            } else {
+                document.getElementById('preview-capa-edit').style.display = 'none';
+            }
+        });
+
+        // Buscar informações por código de barras
+        document.getElementById('btn-buscar-codigo').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value.trim();
+            
+            if (!codigo) {
+                showMessage('Digite o código de barras!', 'error');
+                return;
+            }
+
+            await buscarPorCodigoDeBarras(codigo, 'add');
+        });
+
+        document.getElementById('btn-buscar-codigo-edit').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const codigo = document.getElementById('edit-codigo').value.trim();
+            
+            if (!codigo) {
+                showMessage('Digite o código de barras!', 'error');
+                return;
+            }
+
+            await buscarPorCodigoDeBarras(codigo, 'edit');
+        });
+
+        async function buscarPorCodigoDeBarras(codigo, tipo, autoDetect = false) {
+            // Se for busca automática e o botão existir, mostrar loading
+            let btn = null;
+            let originalText = null;
+            
+            if (!autoDetect) {
+                btn = event.target;
+                originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Buscando...';
+            }
+
+            try {
+                // Limpar espaços e hífen do código
+                const isbnLimpo = codigo.replace(/[-\s]/g, '');
+
+                // Tentar buscar na OpenLibrary API (gratuita)
+                let dados = await buscarOpenLibrary(isbnLimpo);
+
+                // Se não encontrou, tentar Google Books
+                if (!dados) {
+                    dados = await buscarGoogleBooks(isbnLimpo);
+                }
+
+                // Se não encontrou, tentar barcodable
+                if (!dados) {
+                    dados = await buscarBarcodable(isbnLimpo);
+                }
+
+                if (dados) {
+                    preencherFormulario(dados, tipo);
+                    if (!autoDetect) {
+                        showMessage('Informações encontradas! Complete os dados faltantes se necessário.', 'success');
+                    }
+                }
+
+                // Sempre buscar no Mercado Livre (mesmo que o ISBN não tenha sido encontrado)
+                await buscarMercadoLivre(codigo, tipo);
+
+            } catch (error) {
+                console.error('Erro ao buscar:', error);
+                if (!autoDetect) {
+                    showMessage('Erro na busca. Tente novamente ou preencha manualmente.', 'error');
+                }
+            } finally {
+                if (btn && originalText) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
+        }
+
+        async function buscarOpenLibrary(isbn) {
+            try {
+                const response = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
+                
+                if (!response.ok) return null;
+
+                const data = await response.json();
+
+                if (data.title) {
+                    const capaUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
+                    
+                    // Extrair mais informações
+                    let autor = '';
+                    if (data.authors && data.authors.length > 0) {
+                        // Tentar pegar o nome do autor via API adicional
+                        try {
+                            const authorKey = data.authors[0].key;
+                            const authorResp = await fetch(`https://openlibrary.org${authorKey}.json`);
+                            if (authorResp.ok) {
+                                const authorData = await authorResp.json();
+                                autor = authorData.name || '';
+                            }
+                        } catch (e) {
+                            // Se falhar, pegar do campo authors
+                            autor = data.authors[0].name || '';
+                        }
+                    }
+
+                    return {
+                        nome: data.title,
+                        autor: autor || (data.authors ? data.authors[0].name : ''),
+                        capa: capaUrl,
+                        publicador: data.publishers ? data.publishers[0] : '',
+                        ano: data.publish_date ? data.publish_date.split('-')[0] : '',
+                        descricao: data.description ? (typeof data.description === 'string' ? data.description : data.description.value) : ''
+                    };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro OpenLibrary:', error);
+                return null;
+            }
+        }
+
+        async function buscarGoogleBooks(isbn) {
+            try {
+                const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+                
+                if (!response.ok) return null;
+
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    const livro = data.items[0].volumeInfo;
+                    
+                    return {
+                        nome: livro.title,
+                        autor: livro.authors ? livro.authors.join(', ') : '',
+                        capa: livro.imageLinks ? livro.imageLinks.thumbnail.replace('http://', 'https://') : '',
+                        publicador: livro.publisher || '',
+                        ano: livro.publishedDate ? livro.publishedDate.split('-')[0] : '',
+                        descricao: livro.description || '',
+                        idioma: livro.language || '',
+                        paginas: livro.pageCount || ''
+                    };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro Google Books:', error);
+                return null;
+            }
+        }
+
+        async function buscarBarcodable(codigo) {
+            try {
+                const response = await fetch(`https://api.barcodable.com/barcode/${codigo}`);
+                
+                if (!response.ok) return null;
+
+                const data = await response.json();
+
+                if (data.product_name) {
+                    return {
+                        nome: data.product_name,
+                        autor: data.brand || '',
+                        capa: data.image_url || ''
+                    };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro Barcodable:', error);
+                return null;
+            }
+        }
+
+        function preencherFormulario(dados, tipo) {
+            const prefixo = tipo === 'add' ? '' : 'edit-';
+
+            // Preencher nome
+            if (dados.nome) {
+                const inputNome = document.getElementById(`${prefixo}nome`);
+                inputNome.value = dados.nome;
+            }
+
+            // Preencher autor
+            if (dados.autor) {
+                const inputAutor = document.getElementById(`${prefixo}autor`);
+                inputAutor.value = dados.autor;
+            }
+
+            // Preencher volume/ano
+            if (dados.ano) {
+                const inputVolume = document.getElementById(`${prefixo}volume`);
+                inputVolume.value = dados.ano;
+            }
+
+            // Preencher capa automaticamente
+            if (dados.capa) {
+                const inputCapa = document.getElementById(`${prefixo}capa`);
+                inputCapa.value = dados.capa;
+
+                const previewId = tipo === 'add' ? 'preview-capa' : 'preview-capa-edit';
+                const imgId = tipo === 'add' ? 'preview-img' : 'preview-img-edit';
+                
+                const img = document.getElementById(imgId);
+                img.src = dados.capa;
+                img.onload = () => {
+                    document.getElementById(previewId).style.display = 'flex';
+                };
+                img.onerror = () => {
+                    // Se a capa falhar, tenta buscar automaticamente
+                    if (dados.nome) {
+                        buscarCapaAutomaticamente(dados.nome, tipo);
+                    }
+                };
+            } else if (dados.nome) {
+                // Se não tem capa, tenta buscar automaticamente
+                buscarCapaAutomaticamente(dados.nome, tipo);
+            }
+        }
+
+        async function buscarCapaAutomaticamente(nomeManga, tipo) {
+            try {
+                const prefixo = tipo === 'add' ? '' : 'edit-';
+                const inputCapa = document.getElementById(`${prefixo}capa`);
+
+                // Já tem capa válida, não busca
+                if (inputCapa.value.trim()) return;
+
+                // Tenta Unsplash primeiro
+                let capaUrl = await buscarCapaUnsplash(nomeManga);
+
+                // Se não encontrou, tenta Pixabay
+                if (!capaUrl) {
+                    capaUrl = await buscarCapaPixabay(nomeManga);
+                }
+
+                // Se não encontrou, tenta OpenLibrary por nome
+                if (!capaUrl) {
+                    capaUrl = await buscarCapaOpenLibrary(nomeManga);
+                }
+
+                // Se não encontrou, tenta MyAnimeList
+                if (!capaUrl) {
+                    capaUrl = await buscarCapaMyAnimeList(nomeManga);
+                }
+
+                // Se não encontrou, tenta MangaDex
+                if (!capaUrl) {
+                    capaUrl = await buscarCapaMangaDex(nomeManga);
+                }
+
+                // Se não encontrou, tenta imagem genérica de mangá
+                if (!capaUrl) {
+                    capaUrl = await buscarCapaGenericaManga(nomeManga);
+                }
+
+                if (capaUrl) {
+                    inputCapa.value = capaUrl;
+                    const previewId = tipo === 'add' ? 'preview-capa' : 'preview-capa-edit';
+                    const imgId = tipo === 'add' ? 'preview-img' : 'preview-img-edit';
+                    
+                    const img = document.getElementById(imgId);
+                    img.src = capaUrl;
+                    img.onload = () => {
+                        document.getElementById(previewId).style.display = 'flex';
+                    };
+                    img.onerror = () => {
+                        // Se a imagem falhar, tentar próxima fonte
+                        console.warn('Imagem falhou ao carregar');
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao buscar capa automaticamente:', error);
+            }
+        }
+
+        async function buscarCapaUnsplash(nomeManga) {
+            try {
+                const query = encodeURIComponent(nomeManga + ' manga cover');
+                const response = await fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=1&orientation=portrait`, {
+                    headers: {
+                        'Authorization': 'Client-ID 0c07C8k8FqAzfH3WBjLOG7JFQJ2Qz5IHVVyXS3GJ1nU'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        return data.results[0].urls.small;
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro Unsplash:', error);
+                return null;
+            }
+        }
+
+        async function buscarCapaPixabay(nomeManga) {
+            try {
+                const query = encodeURIComponent(nomeManga + ' manga');
+                const response = await fetch(`https://pixabay.com/api/?key=43476718-7f07a57c95d0fc8e2d48c2e10&q=${query}&image_type=photo&orientation=vertical&per_page=1`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.hits && data.hits.length > 0) {
+                        return data.hits[0].webformatURL;
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro Pixabay:', error);
+                return null;
+            }
+        }
+
+        async function buscarCapaOpenLibrary(nomeManga) {
+            try {
+                const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(nomeManga)}&limit=1`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.docs && data.docs.length > 0) {
+                        const livro = data.docs[0];
+                        const isbn = livro.isbn ? livro.isbn[0] : '';
+                        if (isbn) {
+                            return `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
+                        }
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro OpenLibrary capa:', error);
+                return null;
+            }
+        }
+
+        async function buscarCapaMyAnimeList(nomeManga) {
+            try {
+                const query = encodeURIComponent(nomeManga);
+                const response = await fetch(`https://api.jikan.moe/v4/manga?query=${query}&limit=1`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.data && data.data.length > 0) {
+                        const manga = data.data[0];
+                        if (manga.images && manga.images.jpg && manga.images.jpg.image_url) {
+                            return manga.images.jpg.image_url;
+                        }
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro MyAnimeList:', error);
+                return null;
+            }
+        }
+
+        async function buscarCapaMangaDex(nomeManga) {
+            try {
+                const query = encodeURIComponent(nomeManga);
+                const response = await fetch(`https://api.mangadex.org/manga?title=${query}&limit=1`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.data && data.data.length > 0) {
+                        const manga = data.data[0];
+                        // Construir URL da capa do MangaDex
+                        if (manga.relationships) {
+                            const coverRel = manga.relationships.find(r => r.type === 'cover_art');
+                            if (coverRel) {
+                                const coverId = coverRel.id;
+                                return `https://uploads.mangadex.org/covers/${manga.id}/${coverId}.256.jpg`;
+                            }
+                        }
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro MangaDex:', error);
+                return null;
+            }
+        }
+
+        async function buscarCapaGenericaManga(nomeManga) {
+            try {
+                // Tenta encontrar uma imagem genérica de mangá
+                // Primeiro tenta Unsplash com termo mais genérico
+                let response = await fetch(`https://api.unsplash.com/search/photos?query=manga anime cover book&per_page=5&orientation=portrait`, {
+                    headers: {
+                        'Authorization': 'Client-ID 0c07C8k8FqAzfH3WBjLOG7JFQJ2Qz5IHVVyXS3GJ1nU'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        // Pega uma imagem aleatória da lista
+                        const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 5));
+                        return data.results[randomIndex].urls.small;
+                    }
+                }
+
+                // Se tudo falhar, tenta Pixabay genérico
+                response = await fetch(`https://pixabay.com/api/?key=43476718-7f07a57c95d0fc8e2d48c2e10&q=manga+book+cover&image_type=photo&orientation=vertical&per_page=5`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.hits && data.hits.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * Math.min(data.hits.length, 5));
+                        return data.hits[randomIndex].webformatURL;
+                    }
+                }
+
+                // Última tentativa: imagem placeholder de qualidade
+                return 'https://via.placeholder.com/300x450/667eea/ffffff?text=' + encodeURIComponent('Manga');
+            } catch (error) {
+                console.error('Erro Genérica:', error);
+                return 'https://via.placeholder.com/300x450/667eea/ffffff?text=' + encodeURIComponent('Manga');
+            }
+        }
+
+        async function buscarMercadoLivre(codigo, tipo) {
+            try {
+                const prefixo = tipo === 'add' ? '' : 'edit-';
+                const nomeManga = document.getElementById(`${prefixo}nome`).value.trim();
+
+                // Usar a API do Mercado Livre para buscar pelo código
+                const searchTerm = codigo.replace(/[-\s]/g, '');
+                
+                // Primeiro tenta buscar pelo ISBN
+                let response = await fetch(`https://api.mercadolibre.com/sites/MLB/search?q=${searchTerm}&limit=5`);
+
+                if (!response.ok) throw new Error('Erro na busca Mercado Livre');
+
+                let data = await response.json();
+
+                // Se não encontrou pelo ISBN, tenta pelo nome do mangá
+                if (!data.results || data.results.length === 0) {
+                    response = await fetch(`https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(nomeManga + ' manga')}&limit=5`);
+                    
+                    if (!response.ok) throw new Error('Erro na busca Mercado Livre');
+                    data = await response.json();
+                }
+
+                if (data.results && data.results.length > 0) {
+                    exibirResultadosMercadoLivre(data.results, tipo);
+                } else {
+                    limparResultadosMercadoLivre(tipo);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar Mercado Livre:', error);
+                limparResultadosMercadoLivre(tipo);
+            }
+        }
+
+        function exibirResultadosMercadoLivre(items, tipo) {
+            const prefixo = tipo === 'add' ? '' : 'edit-';
+            const container = document.getElementById(`ml-items${prefixo ? '-edit' : ''}`);
+            const infoBox = document.getElementById(`ml-info${prefixo ? '-edit' : ''}`);
+
+            let html = '';
+            items.slice(0, 3).forEach(item => {
+                const preco = item.price ? `R$ ${item.price.toFixed(2)}` : 'Preço não disponível';
+                
+                html += `
+                    <div class="ml-item">
+                        <div class="ml-title">${escapeHtml(item.title)}</div>
+                        <div class="ml-price">${preco}</div>
+                        ${item.seller ? `<div style="font-size: 0.85em; color: #666;">Vendedor: ${escapeHtml(item.seller.nickname)}</div>` : ''}
+                        <a href="${item.permalink}" target="_blank" class="ml-link">Ver no Mercado Livre ↗</a>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            infoBox.classList.add('show');
+        }
+
+        function limparResultadosMercadoLivre(tipo) {
+            const prefixo = tipo === 'add' ? '' : 'edit-';
+            const infoBox = document.getElementById(`ml-info${prefixo ? '-edit' : ''}`);
+            infoBox.classList.remove('show');
+        }
+
+        // Scanner de Código de Barras
+        function setupScannerListeners() {
+            // Scanner removido
+        }
+
+        function preencherCodigoDeBarra(codigo) {
+            const codigoInput = document.getElementById('codigo');
+            codigoInput.value = codigo;
+            
+            // Dispara a busca automática
+            if (codigo.length >= 10) {
+                buscarPorCodigoDeBarras(codigo, 'add', true);
+            }
+        }
+
+        async function buscarPorNomeManga(nome, tipo, autoDetect = false) {
+            let btn = null;
+            let originalText = null;
+            
+            if (!autoDetect) {
+                btn = event.target;
+                originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Buscando...';
+            }
+
+            try {
+                // Tentar buscar na OpenLibrary API
+                let dados = await buscarOpenLibraryPorNome(nome);
+
+                // Se não encontrou, tentar Google Books
+                if (!dados) {
+                    dados = await buscarGoogleBooksPorNome(nome);
+                }
+
+                if (dados) {
+                    preencherFormulario(dados, tipo);
+                    if (!autoDetect) {
+                        showMessage('Informações encontradas! Complete os dados faltantes se necessário.', 'success');
+                    }
+                } else {
+                    if (!autoDetect) {
+                        showMessage('Nenhum resultado encontrado para este nome.', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao buscar por nome:', error);
+                if (!autoDetect) {
+                    showMessage('Erro na busca. Tente novamente ou preencha manualmente.', 'error');
+                }
+            } finally {
+                if (btn && originalText) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
+        }
+
+        async function buscarOpenLibraryPorNome(nome) {
+            try {
+                const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(nome)}&limit=1`);
+                
+                if (!response.ok) return null;
+
+                const data = await response.json();
+
+                if (data.docs && data.docs.length > 0) {
+                    const livro = data.docs[0];
+                    const isbn = livro.isbn ? livro.isbn[0] : '';
+                    const capaUrl = isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg` : '';
+                    
+                    return {
+                        nome: livro.title,
+                        autor: livro.author_name ? livro.author_name[0] : '',
+                        capa: capaUrl,
+                        ano: livro.first_publish_year
+                    };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro OpenLibrary (nome):', error);
+                return null;
+            }
+        }
+
+        async function buscarGoogleBooksPorNome(nome) {
+            try {
+                const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(nome)}&maxResults=1`);
+                
+                if (!response.ok) return null;
+
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    const livro = data.items[0].volumeInfo;
+                    
+                    return {
+                        nome: livro.title,
+                        autor: livro.authors ? livro.authors[0] : '',
+                        capa: livro.imageLinks ? livro.imageLinks.thumbnail : '',
+                        ano: livro.publishedDate ? livro.publishedDate.split('-')[0] : ''
+                    };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro Google Books (nome):', error);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
