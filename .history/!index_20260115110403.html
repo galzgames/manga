@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Mangás</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-card, .list-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 25px;
+        }
+
+        .form-card h2, .list-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .search-group {
+            margin-bottom: 20px;
+        }
+
+        .search-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .manga-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .manga-item {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .manga-item:hover {
+            background: #f0f0f0;
+        }
+
+        .manga-info {
+            flex: 1;
+        }
+
+        .manga-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+            margin-bottom: 3px;
+        }
+
+        .manga-code {
+            color: #667eea;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .manga-date {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+
+        .manga-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-edit {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-edit:hover, .btn-delete:hover {
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .manga-actions {
+                flex-direction: column;
+            }
+        }
+
+        .scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f0f0f0;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Gestão de Mangás</h1>
+            <p>Organize sua coleção de mangás com facilidade</p>
+        </div>
+
+        <div id="message-container"></div>
+
+        <div class="main-content">
+            <!-- Form Section -->
+            <div class="form-card">
+                <h2>Adicionar Mangá</h2>
+                <form id="manga-form">
+                    <div class="form-group">
+                        <label for="codigo">Código de Barras:</label>
+                        <input type="text" id="codigo" placeholder="Digite o código de barras" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nome">Nome do Mangá:</label>
+                        <input type="text" id="nome" placeholder="Digite o nome do mangá" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="autor">Autor (opcional):</label>
+                        <input type="text" id="autor" placeholder="Nome do autor">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volume">Volume (opcional):</label>
+                        <input type="text" id="volume" placeholder="Número do volume">
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-add">➕ Adicionar</button>
+                        <button type="reset" class="btn-clear">🔄 Limpar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- List Section -->
+            <div class="list-card">
+                <h2>Meus Mangás</h2>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <h3 id="total-count">0</h3>
+                        <p>Total</p>
+                    </div>
+                </div>
+
+                <div class="search-group">
+                    <input type="text" id="search" placeholder="🔍 Buscar por nome ou código...">
+                </div>
+
+                <div class="manga-list scrollbar" id="manga-list">
+                    <div class="empty-state">
+                        <p>Nenhum mangá cadastrado ainda.<br>Comece adicionando um!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Mangá</h2>
+            <form id="edit-form">
+                <div class="form-group">
+                    <label for="edit-codigo">Código de Barras:</label>
+                    <input type="text" id="edit-codigo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-nome">Nome:</label>
+                    <input type="text" id="edit-nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-autor">Autor:</label>
+                    <input type="text" id="edit-autor">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-volume">Volume:</label>
+                    <input type="text" id="edit-volume">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save">💾 Salvar</button>
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let mangas = [];
+        let editingIndex = -1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMangas();
+            renderMangas();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('manga-form').addEventListener('submit', addManga);
+            document.getElementById('search').addEventListener('input', handleSearch);
+            document.querySelector('.close').addEventListener('click', closeEditModal);
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('editModal');
+                if (e.target === modal) closeEditModal();
+            });
+        }
+
+        function loadMangas() {
+            const stored = localStorage.getItem('mangas');
+            mangas = stored ? JSON.parse(stored) : [];
+        }
+
+        function saveMangas() {
+            localStorage.setItem('mangas', JSON.stringify(mangas));
+        }
+
+        function addManga(e) {
+            e.preventDefault();
+
+            const codigo = document.getElementById('codigo').value.trim();
+            const nome = document.getElementById('nome').value.trim();
+            const autor = document.getElementById('autor').value.trim();
+            const volume = document.getElementById('volume').value.trim();
+
+            // Validate duplicate barcode
+            if (mangas.some(m => m.codigo === codigo)) {
+                showMessage('Este código de barras já está cadastrado!', 'error');
+                return;
+            }
+
+            const manga = {
+                id: Date.now(),
+                codigo,
+                nome,
+                autor,
+                volume,
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+
+            mangas.push(manga);
+            saveMangas();
+            renderMangas();
+            document.getElementById('manga-form').reset();
+            showMessage('Mangá adicionado com sucesso!', 'success');
+        }
+
+        function renderMangas(toRender = mangas) {
+            const list = document.getElementById('manga-list');
+            document.getElementById('total-count').textContent = mangas.length;
+
+            if (toRender.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>Nenhum mangá encontrado.</p></div>';
+                return;
+            }
+
+            list.innerHTML = toRender.map((manga, index) => `
+                <div class="manga-item">
+                    <div class="manga-info">
+                        <div class="manga-name">${escapeHtml(manga.nome)}</div>
+                        <div class="manga-code">📦 ${escapeHtml(manga.codigo)}</div>
+                        ${manga.autor ? `<div class="manga-code">✍️ ${escapeHtml(manga.autor)}</div>` : ''}
+                        ${manga.volume ? `<div class="manga-code">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
+                        <div class="manga-date">Adicionado: ${manga.data}</div>
+                    </div>
+                    <div class="manga-actions">
+                        <button class="btn-edit" onclick="openEditModal(${manga.id})">✏️ Editar</button>
+                        <button class="btn-delete" onclick="deleteManga(${manga.id})">🗑️ Deletar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteManga(id) {
+            if (confirm('Tem certeza que deseja deletar este mangá?')) {
+                mangas = mangas.filter(m => m.id !== id);
+                saveMangas();
+                renderMangas();
+                showMessage('Mangá removido com sucesso!', 'success');
+            }
+        }
+
+        function openEditModal(id) {
+            editingIndex = mangas.findIndex(m => m.id === id);
+            const manga = mangas[editingIndex];
+
+            document.getElementById('edit-codigo').value = manga.codigo;
+            document.getElementById('edit-nome').value = manga.nome;
+            document.getElementById('edit-autor').value = manga.autor || '';
+            document.getElementById('edit-volume').value = manga.volume || '';
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            editingIndex = -1;
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const codigo = document.getElementById('edit-codigo').value.trim();
+            const nome = document.getElementById('edit-nome').value.trim();
+            const autor = document.getElementById('edit-autor').value.trim();
+            const volume = document.getElementById('edit-volume').value.trim();
+
+            // Check for duplicate code (excluding current manga)
+            if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
+                showMessage('Este código de barras já está cadastrado!', 'error');
+                return;
+            }
+
+            mangas[editingIndex] = {
+                ...mangas[editingIndex],
+                codigo,
+                nome,
+                autor,
+                volume
+            };
+
+            saveMangas();
+            renderMangas();
+            closeEditModal();
+            showMessage('Mangá atualizado com sucesso!', 'success');
+        });
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = mangas.filter(manga =>
+                manga.nome.toLowerCase().includes(query) ||
+                manga.codigo.toLowerCase().includes(query)
+            );
+            renderMangas(filtered);
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('message-container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.appendChild(message);
+
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
