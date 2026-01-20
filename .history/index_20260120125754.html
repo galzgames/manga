@@ -1119,26 +1119,47 @@
         });
 
         function setupEventListeners() {
-            // Função simplifical para adicionar listeners com segurança
-            const safeAddListener = (selector, event, handler) => {
-                const el = typeof selector === 'string' ? 
-                    (selector.startsWith('.') || selector.startsWith('#')) ? document.querySelector(selector) : document.getElementById(selector) 
-                    : selector;
-                if (el) el.addEventListener(event, handler);
+            const elements = {
+                'manga-form': document.getElementById('manga-form'),
+                'search': document.getElementById('search'),
+                'close': document.querySelector('.close'),
+                'codigo': document.getElementById('codigo'),
+                'edit-codigo': document.getElementById('edit-codigo')
             };
-
-            // Listeners essenciais
-            safeAddListener('manga-form', 'submit', addManga);
-            safeAddListener('search', 'input', handleSearch);
-            safeAddListener('.close', 'click', closeEditModal);
-
+            
+            // Verificar quais elementos existem
+            console.log('📋 Elementos encontrados:', Object.keys(elements).filter(k => elements[k]));
+            
+            // Adicionar listeners com segurança
+            if (elements['manga-form']) {
+                elements['manga-form'].addEventListener('submit', addManga);
+            }
+            if (elements['search']) {
+                elements['search'].addEventListener('input', handleSearch);
+            }
+            if (elements['close']) {
+                elements['close'].addEventListener('click', closeEditModal);
+            }
+            
             window.addEventListener('click', (e) => {
                 const modal = document.getElementById('editModal');
-                if (modal && e.target === modal) closeEditModal();
+                if (e.target === modal) closeEditModal();
             });
 
-            console.log('✅ Event listeners configurados com sucesso');
-        }
+            // Auto-buscar ao digitar código de barras
+            let debounceTimer;
+            if (elements['codigo']) {
+                elements['codigo'].addEventListener('blur', (e) => {
+                    const codigo = e.target.value.trim();
+                    if (codigo.length >= 10) { // ISBN tem pelo menos 10 dígitos
+                        buscarPorCodigoDeBarras(codigo, 'add', true);
+                    }
+                });
+                
+                // Busca em tempo real ao digitar o código (com debounce)
+                elements['codigo'].addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    const codigo = e.target.value.trim();
                 
                 if (codigo.length >= 10) {
                     // Mostrar indicador de busca
