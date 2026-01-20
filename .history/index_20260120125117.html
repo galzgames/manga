@@ -1273,31 +1273,33 @@
             localStorage.setItem('mangas', JSON.stringify(mangas));
             localStorage.setItem('historicoEstoque', JSON.stringify(historicoEstoque));
             
-            // Sincroniza com Supabase
-            syncMangasWithSupabase();
+            // Se Firebase estiver disponível, sincroniza também
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                syncMangasWithFirebase();
+            }
         }
         
-        async function syncMangasWithSupabase() {
+        async function syncMangasWithFirebase() {
             try {
                 for (const manga of mangas) {
-                    // Se o mangá tem um ID numérico (criado localmente), cria no Supabase
+                    // Se o mangá tem um ID numérico (criado localmente), cria no Firebase
                     if (typeof manga.id === 'number') {
-                        const docId = await saveMangaToSupabase(manga);
-                        manga.id = docId; // Atualiza com o ID do Supabase
+                        const docId = await saveMangaToFirebase(manga);
+                        manga.id = docId; // Atualiza com o ID do Firebase
                     } else {
-                        // Se já tem ID (do Supabase), atualiza
-                        await updateMangaInSupabase(manga.id, manga);
+                        // Se já tem ID de string (do Firebase), atualiza
+                        await updateMangaInFirebase(manga.id, manga);
                     }
                 }
                 
                 // Sincroniza histórico também
                 for (const [mangaId, movimentacoes] of Object.entries(historicoEstoque)) {
-                    await saveHistoricoToSupabase(mangaId, movimentacoes);
+                    await saveHistoricoToFirebase(mangaId, movimentacoes);
                 }
                 
-                console.log('✅ Dados sincronizados com Supabase');
+                console.log('✅ Dados sincronizados com Firebase');
             } catch (error) {
-                console.error('⚠️ Erro ao sincronizar com Supabase:', error);
+                console.error('⚠️ Erro ao sincronizar com Firebase:', error);
                 // Mesmo com erro, os dados estão salvos no localStorage
             }
         }
@@ -1356,22 +1358,6 @@
             }
             
             saveMangas();
-            
-            // Sincroniza imediatamente com Supabase
-            try {
-                console.log('📤 Salvando manga no Supabase:', manga);
-                const mangaId = await saveMangaToSupabase({
-                    id: manga.id,
-                    titulo: manga.nome || manga.titulo,
-                    autor: manga.autor,
-                    preco: manga.preco,
-                    capa_url: manga.capa || null
-                });
-                console.log('✅ Manga salvo no Supabase com ID:', mangaId);
-            } catch (error) {
-                console.warn('⚠️ Erro ao sincronizar manga com Supabase:', error);
-            }
-            
             renderMangas();
             document.getElementById('manga-form').reset();
             document.getElementById('estoque').value = '1';

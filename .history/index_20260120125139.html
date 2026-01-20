@@ -1356,22 +1356,6 @@
             }
             
             saveMangas();
-            
-            // Sincroniza imediatamente com Supabase
-            try {
-                console.log('📤 Salvando manga no Supabase:', manga);
-                const mangaId = await saveMangaToSupabase({
-                    id: manga.id,
-                    titulo: manga.nome || manga.titulo,
-                    autor: manga.autor,
-                    preco: manga.preco,
-                    capa_url: manga.capa || null
-                });
-                console.log('✅ Manga salvo no Supabase com ID:', mangaId);
-            } catch (error) {
-                console.warn('⚠️ Erro ao sincronizar manga com Supabase:', error);
-            }
-            
             renderMangas();
             document.getElementById('manga-form').reset();
             document.getElementById('estoque').value = '1';
