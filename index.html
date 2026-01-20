@@ -1375,13 +1375,14 @@
             document.getElementById('capa').value = '';
             document.getElementById('capa-url').value = '';
             document.getElementById('capa-file').value = '';
-            document.getElementById('preview-capa').style.display = 'none';
+            const previewCapaEl = document.getElementById('preview-capa'); if (previewCapaEl) previewCapaEl.style.display = 'none';
             showMessage('Mangá adicionado com sucesso!', 'success');
         }
 
         function renderMangas(toRender = mangas) {
             const list = document.getElementById('manga-list');
-            document.getElementById('total-count').textContent = mangas.length;
+            const totalCountEl = document.getElementById('total-count'); if (totalCountEl) totalCountEl.textContent = mangas.length;
+            if (!list) return;
 
             if (toRender.length === 0) {
                 list.innerHTML = '<div class="empty-state"><p>Nenhum mangá encontrado.</p></div>';
@@ -1557,10 +1558,10 @@
         async function buscarMultiplasCapas(nomeManga, tipo) {
             try {
                 const container = document.getElementById('capas-container');
-                container.innerHTML = '<div class="capas-loading"><div class="loading"></div>Buscando capas na internet...</div>';
+                if (container) container.innerHTML = '<div class="capas-loading"><div class="loading"></div>Buscando capas na internet...</div>';
                 
                 const modal = document.getElementById('modalCapas');
-                modal.style.display = 'block';
+                if (modal) modal.style.display = 'block';
 
                 // Definir o tipo atual
                 currentCapaTipo = tipo;
@@ -1577,8 +1578,8 @@
                 let capas = await buscarCapasOtimizadas(nomeManga, 10);
 
                 if (capas.length === 0) {
-                    container.innerHTML = '<div class="capas-loading">❌ Nenhuma capa encontrada. Tente novamente com outro nome.</div>';
-                    document.getElementById('btn-carregar-mais').style.display = 'none';
+                    if (container) container.innerHTML = '<div class="capas-loading">❌ Nenhuma capa encontrada. Tente novamente com outro nome.</div>';
+                    const btnCarregarMais = document.getElementById('btn-carregar-mais'); if (btnCarregarMais) btnCarregarMais.style.display = 'none';
                     return;
                 }
 
@@ -1586,11 +1587,10 @@
                 exibirCapasParaSeleção(capas, tipo);
                 
                 // Mostrar botão de carregar mais se houver possibilidade
-                document.getElementById('btn-carregar-mais').style.display = 'block';
-                document.getElementById('btn-carregar-mais').disabled = false;
+                const btnCarregarMais = document.getElementById('btn-carregar-mais'); if (btnCarregarMais) { btnCarregarMais.style.display = 'block'; btnCarregarMais.disabled = false; }
             } catch (error) {
                 console.error('Erro ao buscar múltiplas capas:', error);
-                document.getElementById('capas-container').innerHTML = '<div class="capas-loading">❌ Erro ao buscar capas.</div>';
+                const container = document.getElementById('capas-container'); if (container) container.innerHTML = '<div class="capas-loading">❌ Erro ao buscar capas.</div>';
             }
         }
 
@@ -2005,15 +2005,15 @@
             const url = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img');
-                img.src = url;
+                if (img) img.src = url;
                 img.onload = () => {
-                    document.getElementById('preview-capa').style.display = 'flex';
+                    const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'flex';
                 };
                 img.onerror = () => {
-                    document.getElementById('preview-capa').style.display = 'none';
+                    const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'none';
                 };
             } else {
-                document.getElementById('preview-capa').style.display = 'none';
+                const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'none';
             }
         });
 
@@ -2022,15 +2022,15 @@
             const url = (editCapaEl && editCapaEl.value) ? editCapaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img-edit');
-                img.src = url;
+                if (img) img.src = url;
                 img.onload = () => {
-                    document.getElementById('preview-capa-edit').style.display = 'flex';
+                    const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'flex';
                 };
                 img.onerror = () => {
-                    document.getElementById('preview-capa-edit').style.display = 'none';
+                    const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'none';
                 };
             } else {
-                document.getElementById('preview-capa-edit').style.display = 'none';
+                const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'none';
             }
         });
 
