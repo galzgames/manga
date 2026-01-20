@@ -7,37 +7,72 @@
     
     <!-- Wrapper global para proteger getElementById contra null references -->
     <script>
-        // Criar um objeto proxy para elementos não encontrados
-        function createNullElement() {
-            return new Proxy({}, {
-                get: (target, prop) => {
-                    if (prop === 'addEventListener' || prop === 'removeEventListener') {
-                        return () => { console.warn(`⚠️ Tentativa de ${prop} em elemento nulo`); };
-                    }
-                    if (prop === 'classList') {
-                        return { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false };
-                    }
-                    if (prop === 'style') {
-                        return new Proxy({}, { set: () => true, get: () => '' });
-                    }
-                    return () => {};  // Retorna função para qualquer coisa que não encontrar
-                },
-                set: () => true
-            });
-        }
-
         const originalGetElementById = document.getElementById;
         const originalQuerySelector = document.querySelector;
         
         document.getElementById = function(id) {
             const el = originalGetElementById.call(document, id);
-            return el || createNullElement();
+            if (!el) {
+                console.warn(`⚠️ Elemento com ID "${id}" não encontrado`);
+                return {
+                    addEventListener: () => {},
+                    style: {},
+                    value: '',
+                    classList: { remove: () => {}, add: () => {}, toggle: () => {} },
+                    appendChild: () => {},
+                    setAttribute: () => {},
+                    getAttribute: () => '',
+                    removeAttribute: () => {},
+                    click: () => {},
+                    focus: () => {},
+                    blur: () => {},
+                    files: [],
+                    textContent: '',
+                    innerHTML: '',
+                    display: 'none',
+                    src: '',
+                    onload: null,
+                    onerror: null,
+                    offsetHeight: 0,
+                    offsetWidth: 0,
+                    innerHTML: ''
+                };
+            }
+            return el;
         };
         
         document.querySelector = function(selector) {
             const el = originalQuerySelector.call(document, selector);
-            return el || createNullElement();
-        };
+            if (!el) {
+                console.warn(`⚠️ Elemento com seletor "${selector}" não encontrado`);
+                return {
+                    addEventListener: () => {},
+                    style: {},
+                    value: '',
+                    classList: { remove: () => {}, add: () => {}, toggle: () => {} },
+                    appendChild: () => {},
+                    setAttribute: () => {},
+                    getAttribute: () => '',
+                    removeAttribute: () => {},
+                    click: () => {},
+                    focus: () => {},
+                    blur: () => {},
+                    files: [],
+                    textContent: '',
+                    innerHTML: '',
+                    display: 'none',
+                    src: '',
+                    onload: null,
+                    onerror: null,
+                    offsetHeight: 0,
+                    offsetWidth: 0
+                };
+            }
+            return el;
+        }
+                };
+            }
+            return el;
         };
     </script>
     
