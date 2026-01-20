@@ -1486,39 +1486,38 @@
             editFormEl.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const codigo = document.getElementById('edit-codigo').value.trim();
-                const nome = document.getElementById('edit-nome').value.trim();
-                const autor = document.getElementById('edit-autor').value.trim();
-                const volume = document.getElementById('edit-volume').value.trim();
-                const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
-                const preco = document.getElementById('edit-preco').value.trim();
-                const localizacao = document.getElementById('edit-localizacao').value.trim();
-                const capa = document.getElementById('edit-capa').value.trim();
+            const codigo = document.getElementById('edit-codigo').value.trim();
+            const nome = document.getElementById('edit-nome').value.trim();
+            const autor = document.getElementById('edit-autor').value.trim();
+            const volume = document.getElementById('edit-volume').value.trim();
+            const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
+            const preco = document.getElementById('edit-preco').value.trim();
+            const localizacao = document.getElementById('edit-localizacao').value.trim();
+            const capa = document.getElementById('edit-capa').value.trim();
 
-                // Check for duplicate code (excluding current manga)
-                if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
-                    showMessage('Este código de barras já está cadastrado!', 'error');
-                    return;
-                }
+            // Check for duplicate code (excluding current manga)
+            if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
+                showMessage('Este código de barras já está cadastrado!', 'error');
+                return;
+            }
 
-                mangas[editingIndex] = {
-                    ...mangas[editingIndex],
-                    codigo,
-                    nome,
-                    autor,
-                    volume,
-                    estoque,
-                    preco,
-                    localizacao,
-                    capa
-                };
+            mangas[editingIndex] = {
+                ...mangas[editingIndex],
+                codigo,
+                nome,
+                autor,
+                volume,
+                estoque,
+                preco,
+                localizacao,
+                capa
+            };
 
-                saveMangas();
-                renderMangas();
-                closeEditModal();
-                showMessage('Mangá atualizado com sucesso!', 'success');
-            });
-        }
+            saveMangas();
+            renderMangas();
+            closeEditModal();
+            showMessage('Mangá atualizado com sucesso!', 'success');
+        });
 
         function handleSearch(e) {
             const query = e.target.value.toLowerCase();
