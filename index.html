@@ -13,7 +13,7 @@
             return new Proxy({}, {
                 get: (target, prop) => {
                     if (prop === 'addEventListener' || prop === 'removeEventListener') {
-                        return () => { console.warn(`⚠️ Tentativa de ${prop} em elemento nulo`); };
+                        return () => { /* noop: elemento ausente */ };
                     }
                     if (prop === 'classList') {
                         return { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false };
