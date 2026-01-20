@@ -1521,6 +1521,63 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
+        // Buscar capa automaticamente
+        const btnBuscarCapa = document.getElementById('btn-buscar-capa');
+        if (btnBuscarCapa) {
+            btnBuscarCapa.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const nome = document.getElementById('nome').value.trim();
+                
+                if (!nome) {
+                    showMessage('Digite o nome do mangá primeiro!', 'error');
+                    return;
+                }
+
+                const btn = e.target;
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+                try {
+                    currentCapaTipo = 'add';
+                    await buscarMultiplasCapas(nome, 'add');
+                } catch (error) {
+                    showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+
+        const btnBuscarCapaEdit = document.getElementById('btn-buscar-capa-edit');
+        if (btnBuscarCapaEdit) {
+            btnBuscarCapaEdit.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const nome = document.getElementById('edit-nome').value.trim();
+                
+                if (!nome) {
+                    showMessage('Digite o nome do mangá primeiro!', 'error');
+                    return;
+                }
+
+                const btn = e.target;
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+                try {
+                    currentCapaTipo = 'edit';
+                    await buscarMultiplasCapas(nome, 'edit');
+                } catch (error) {
+                    showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+
         async function buscarMultiplasCapas(nomeManga, tipo) {
             try {
                 const container = document.getElementById('capas-container');
