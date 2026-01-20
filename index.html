@@ -1307,7 +1307,7 @@
             let capa = document.getElementById('capa').value.trim();
             
             // Se há arquivo de capa selecionado, faz upload para Supabase Storage
-            const capaFile = document.getElementById('capa-file').files[0];
+            const capaFile = (document.getElementById('capa-file').files || [])[0] || null;
             if (capaFile) {
                 try {
                     console.log('📤 Fazendo upload da capa para Supabase Storage...');
@@ -1890,34 +1890,38 @@
         const el_btn_adicionar_capa_manual = document.getElementById('btn-adicionar-capa-manual'); if (el_btn_adicionar_capa_manual) el_btn_adicionar_capa_manual.addEventListener('click', () => {
             const urlInput = document.getElementById('capa-url-manual');
             const fileInput = document.getElementById('capa-upload-manual');
-            const url = urlInput.value.trim();
+            const url = (urlInput && urlInput.value) ? urlInput.value.trim() : '';
 
             if (url) {
                 // Usar URL fornecida
                 selecionarCapaManual(url);
-            } else if (fileInput.files.length > 0) {
-                // Usar arquivo enviado
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selecionarCapaManual(e.target.result);
-                };
-                reader.readAsDataURL(file);
             } else {
-                showMessage('Digite uma URL ou selecione um arquivo!', 'error');
+                const files = (fileInput && fileInput.files) ? fileInput.files : [];
+                const file = files[0] || null;
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        selecionarCapaManual(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showMessage('Digite uma URL ou selecione um arquivo!', 'error');
+                }
             }
         });
 
         // Event listener para preview de arquivo
         const el_capa_upload_manual = document.getElementById('capa-upload-manual'); if (el_capa_upload_manual) el_capa_upload_manual.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+            const files = (e && e.target && e.target.files) ? e.target.files : [];
+            const file = files[0] || null;
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const img = document.getElementById('preview-img-manual');
-                    img.src = event.target.result;
-                    document.getElementById('preview-capa-manual').style.display = 'block';
+                    if (img) img.src = event.target.result;
+                    const preview = document.getElementById('preview-capa-manual'); if (preview) preview.style.display = 'block';
                 };
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
             }
         });
 
