@@ -1,0 +1,28 @@
+# Firebase Configuration (contains sensitive credentials)
+firebase-config.js
+
+# Node modules
+node_modules/
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Cache
+*.log

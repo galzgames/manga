@@ -1083,19 +1083,19 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Aguarda Supabase inicializar
-            if (typeof supabaseClient === 'undefined') {
-                console.error('❌ Supabase não foi carregado');
-                showMessage('Erro: Supabase não foi carregado. Verifique a configuração.', 'error');
+            // Aguarda Firebase inicializar
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase não foi carregado');
+                showMessage('Erro: Firebase não foi carregado. Verifique a configuração.', 'error');
                 loadMangas(); // Fallback para localStorage
             } else {
-                // Carrega dados do Supabase
-                loadMangasFromSupabase().then((data) => {
-                    mangas = data;
-                    return loadHistoricoFromSupabase();
-                }).then((data) => {
-                    historicoEstoque = data;
-                    renderMangas();
+                // Carrega dados do Firebase
+                loadMangasFromFirebase().then(() => {
+                    mangas = cachedMangas;
+                    loadHistoricoFromFirebase().then(() => {
+                        historicoEstoque = cachedHistorico;
+                        renderMangas();
+                    });
                 }).catch(() => {
                     // Se falhar, tenta localStorage como fallback
                     loadMangas();
@@ -1328,8 +1328,8 @@
             const capaFile = document.getElementById('capa-file').files[0];
             if (capaFile && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                 try {
-                    console.log('📤 Fazendo upload da capa para Supabase Storage...');
-                    capa = await uploadCapaToSupabaseStorage(capaFile, `manga_${id}`);
+                    console.log('📤 Fazendo upload da capa para Firebase Storage...');
+                    capa = await uploadCapaToStorage(capaFile, `manga_${id}`);
                     console.log('✅ Capa enviada com sucesso');
                 } catch (error) {
                     console.warn('⚠️ Erro ao fazer upload da capa, usando URL local:', error);
@@ -2683,8 +2683,8 @@
         }
     </script>
     
-    <!-- Supabase Configuration and Manager -->
-    <script src="supabase-config.js"></script>
-    <script src="supabase-manager.js"></script>
+    <!-- Firebase Configuration and Manager -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-manager.js"></script>
 </body>
 </html>

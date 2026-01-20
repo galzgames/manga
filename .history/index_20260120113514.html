@@ -7,8 +7,10 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     
-    <!-- Supabase Script -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js"></script>
     
     <style>
         * {
@@ -1083,19 +1085,19 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Aguarda Supabase inicializar
-            if (typeof supabaseClient === 'undefined') {
-                console.error('❌ Supabase não foi carregado');
-                showMessage('Erro: Supabase não foi carregado. Verifique a configuração.', 'error');
+            // Aguarda Firebase inicializar
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase não foi carregado');
+                showMessage('Erro: Firebase não foi carregado. Verifique a configuração.', 'error');
                 loadMangas(); // Fallback para localStorage
             } else {
-                // Carrega dados do Supabase
-                loadMangasFromSupabase().then((data) => {
-                    mangas = data;
-                    return loadHistoricoFromSupabase();
-                }).then((data) => {
-                    historicoEstoque = data;
-                    renderMangas();
+                // Carrega dados do Firebase
+                loadMangasFromFirebase().then(() => {
+                    mangas = cachedMangas;
+                    loadHistoricoFromFirebase().then(() => {
+                        historicoEstoque = cachedHistorico;
+                        renderMangas();
+                    });
                 }).catch(() => {
                     // Se falhar, tenta localStorage como fallback
                     loadMangas();
@@ -1269,42 +1271,11 @@
         }
 
         function saveMangas() {
-            // Salva sempre no localStorage como backup
             localStorage.setItem('mangas', JSON.stringify(mangas));
             localStorage.setItem('historicoEstoque', JSON.stringify(historicoEstoque));
-            
-            // Se Firebase estiver disponível, sincroniza também
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                syncMangasWithFirebase();
-            }
-        }
-        
-        async function syncMangasWithFirebase() {
-            try {
-                for (const manga of mangas) {
-                    // Se o mangá tem um ID numérico (criado localmente), cria no Firebase
-                    if (typeof manga.id === 'number') {
-                        const docId = await saveMangaToFirebase(manga);
-                        manga.id = docId; // Atualiza com o ID do Firebase
-                    } else {
-                        // Se já tem ID de string (do Firebase), atualiza
-                        await updateMangaInFirebase(manga.id, manga);
-                    }
-                }
-                
-                // Sincroniza histórico também
-                for (const [mangaId, movimentacoes] of Object.entries(historicoEstoque)) {
-                    await saveHistoricoToFirebase(mangaId, movimentacoes);
-                }
-                
-                console.log('✅ Dados sincronizados com Firebase');
-            } catch (error) {
-                console.error('⚠️ Erro ao sincronizar com Firebase:', error);
-                // Mesmo com erro, os dados estão salvos no localStorage
-            }
         }
 
-        async function addManga(e) {
+        function addManga(e) {
             e.preventDefault();
 
             const codigo = document.getElementById('codigo').value.trim();
@@ -1322,21 +1293,6 @@
             }
 
             const id = Date.now();
-            let capa = document.getElementById('capa').value.trim();
-            
-            // Se há arquivo de capa selecionado, faz upload para Firebase Storage
-            const capaFile = document.getElementById('capa-file').files[0];
-            if (capaFile && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                try {
-                    console.log('📤 Fazendo upload da capa para Supabase Storage...');
-                    capa = await uploadCapaToSupabaseStorage(capaFile, `manga_${id}`);
-                    console.log('✅ Capa enviada com sucesso');
-                } catch (error) {
-                    console.warn('⚠️ Erro ao fazer upload da capa, usando URL local:', error);
-                    // Continua com a URL local se houver
-                }
-            }
-            
             const manga = {
                 id,
                 codigo,
@@ -1346,7 +1302,7 @@
                 estoque,
                 preco,
                 localizacao,
-                capa: capa,
+                capa: document.getElementById('capa').value.trim(),
                 data: new Date().toLocaleDateString('pt-BR')
             };
 
@@ -2683,8 +2639,8 @@
         }
     </script>
     
-    <!-- Supabase Configuration and Manager -->
-    <script src="supabase-config.js"></script>
-    <script src="supabase-manager.js"></script>
+    <!-- Firebase Configuration and Manager -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-manager.js"></script>
 </body>
 </html>

@@ -1328,8 +1328,8 @@
             const capaFile = document.getElementById('capa-file').files[0];
             if (capaFile && typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                 try {
-                    console.log('📤 Fazendo upload da capa para Supabase Storage...');
-                    capa = await uploadCapaToSupabaseStorage(capaFile, `manga_${id}`);
+                    console.log('📤 Fazendo upload da capa para Firebase Storage...');
+                    capa = await uploadCapaToStorage(capaFile, `manga_${id}`);
                     console.log('✅ Capa enviada com sucesso');
                 } catch (error) {
                     console.warn('⚠️ Erro ao fazer upload da capa, usando URL local:', error);
