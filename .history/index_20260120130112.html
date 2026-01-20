@@ -1463,28 +1463,27 @@
             btnBuscarCapaEdit.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const nome = document.getElementById('edit-nome').value.trim();
-                
-                if (!nome) {
-                    showMessage('Digite o nome do mangá primeiro!', 'error');
-                    return;
-                }
+            
+            if (!nome) {
+                showMessage('Digite o nome do mangá primeiro!', 'error');
+                return;
+            }
 
-                const btn = e.target;
-                const originalText = btn.textContent;
-                btn.disabled = true;
-                btn.innerHTML = '<span class="loading"></span> Buscando...';
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Buscando...';
 
-                try {
-                    currentCapaTipo = 'edit';
-                    await buscarMultiplasCapas(nome, 'edit');
-                } catch (error) {
-                    showMessage('Erro ao buscar capas. Tente novamente.', 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                }
-            });
-        }
+            try {
+                currentCapaTipo = 'edit';
+                await buscarMultiplasCapas(nome, 'edit');
+            } catch (error) {
+                showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
 
         async function buscarMultiplasCapas(nomeManga, tipo) {
             try {
@@ -2602,25 +2601,6 @@
     </script>
     
     <!-- Supabase Configuration and Manager -->
-    <script>
-        // Wrapper para proteger todos os addEventListener contra null references
-        const originalGetElementById = document.getElementById;
-        document.getElementById = function(id) {
-            const el = originalGetElementById.call(document, id);
-            if (!el) {
-                console.warn(`⚠️ Elemento com ID "${id}" não encontrado`);
-                return {
-                    addEventListener: () => console.warn(`⚠️ Tentativa de addEventListener em elemento nulo: ${id}`),
-                    style: {},
-                    value: '',
-                    classList: { remove: () => {}, add: () => {} },
-                    appendChild: () => {}
-                };
-            }
-            return el;
-        };
-        document.getElementById.prototype = originalGetElementById.prototype;
-    </script>
     <script src="supabase-config.js"></script>
     <script src="supabase-manager.js"></script>
 </body>
