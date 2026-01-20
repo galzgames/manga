@@ -1170,7 +1170,8 @@
             if (btnBuscarCapa) {
                 btnBuscarCapa.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    const nome = document.getElementById('nome').value.trim();
+                    const nomeEl = document.getElementById('nome');
+                    const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
                     
                     if (!nome) {
                         showMessage('Digite o nome do mangá primeiro!', 'error');
@@ -1198,7 +1199,8 @@
             if (btnBuscarCapaEdit && btnBuscarCapaEdit.addEventListener) {
                 btnBuscarCapaEdit.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    const nome = document.getElementById('edit-nome').value.trim();
+                    const nomeEl = document.getElementById('edit-nome');
+                    const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
                     
                     if (!nome) {
                         showMessage('Digite o nome do mangá primeiro!', 'error');
@@ -1289,13 +1291,21 @@
         async function addManga(e) {
             e.preventDefault();
 
-            const codigo = document.getElementById('codigo').value.trim();
-            const nome = document.getElementById('nome').value.trim();
-            const autor = document.getElementById('autor').value.trim();
-            const volume = document.getElementById('volume').value.trim();
-            const estoque = parseInt(document.getElementById('estoque').value) || 0;
-            const preco = document.getElementById('preco').value.trim();
-            const localizacao = document.getElementById('localizacao').value.trim();
+            const codigoEl = document.getElementById('codigo');
+            const nomeEl = document.getElementById('nome');
+            const autorEl = document.getElementById('autor');
+            const volumeEl = document.getElementById('volume');
+            const estoqueEl = document.getElementById('estoque');
+            const precoEl = document.getElementById('preco');
+            const localizacaoEl = document.getElementById('localizacao');
+
+            const codigo = (codigoEl && codigoEl.value) ? codigoEl.value.trim() : '';
+            const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+            const autor = (autorEl && autorEl.value) ? autorEl.value.trim() : '';
+            const volume = (volumeEl && volumeEl.value) ? volumeEl.value.trim() : '';
+            const estoque = parseInt((estoqueEl && estoqueEl.value) ? estoqueEl.value : '0') || 0;
+            const preco = (precoEl && precoEl.value) ? precoEl.value.trim() : '';
+            const localizacao = (localizacaoEl && localizacaoEl.value) ? localizacaoEl.value.trim() : '';
 
             // Validate duplicate barcode
             if (mangas.some(m => m.codigo === codigo)) {
@@ -1304,7 +1314,8 @@
             }
 
             const id = Date.now();
-            let capa = document.getElementById('capa').value.trim();
+            const capaEl = document.getElementById('capa');
+            let capa = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
             
             // Se há arquivo de capa selecionado, faz upload para Supabase Storage
             const capaFile = (document.getElementById('capa-file').files || [])[0] || null;
@@ -1468,14 +1479,23 @@
             editFormEl.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const codigo = document.getElementById('edit-codigo').value.trim();
-                const nome = document.getElementById('edit-nome').value.trim();
-                const autor = document.getElementById('edit-autor').value.trim();
-                const volume = document.getElementById('edit-volume').value.trim();
-                const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
-                const preco = document.getElementById('edit-preco').value.trim();
-                const localizacao = document.getElementById('edit-localizacao').value.trim();
-                const capa = document.getElementById('edit-capa').value.trim();
+                const codigoEl = document.getElementById('edit-codigo');
+                const nomeEl = document.getElementById('edit-nome');
+                const autorEl = document.getElementById('edit-autor');
+                const volumeEl = document.getElementById('edit-volume');
+                const estoqueEl = document.getElementById('edit-estoque');
+                const precoEl = document.getElementById('edit-preco');
+                const localizacaoEl = document.getElementById('edit-localizacao');
+                const capaEl = document.getElementById('edit-capa');
+
+                const codigo = (codigoEl && codigoEl.value) ? codigoEl.value.trim() : '';
+                const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+                const autor = (autorEl && autorEl.value) ? autorEl.value.trim() : '';
+                const volume = (volumeEl && volumeEl.value) ? volumeEl.value.trim() : '';
+                const estoque = parseInt((estoqueEl && estoqueEl.value) ? estoqueEl.value : '0') || 0;
+                const preco = (precoEl && precoEl.value) ? precoEl.value.trim() : '';
+                const localizacao = (localizacaoEl && localizacaoEl.value) ? localizacaoEl.value.trim() : '';
+                const capa = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
 
                 // Check for duplicate code (excluding current manga)
                 if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
@@ -1981,7 +2001,8 @@
 
         // Preview da capa quando digitar URL
         const el_capa = document.getElementById('capa'); if (el_capa) el_capa.addEventListener('change', () => {
-            const url = document.getElementById('capa').value.trim();
+            const capaEl = document.getElementById('capa');
+            const url = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img');
                 img.src = url;
@@ -1997,7 +2018,8 @@
         });
 
         const el_edit_capa = document.getElementById('edit-capa'); if (el_edit_capa) el_edit_capa.addEventListener('change', () => {
-            const url = document.getElementById('edit-capa').value.trim();
+            const editCapaEl = document.getElementById('edit-capa');
+            const url = (editCapaEl && editCapaEl.value) ? editCapaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img-edit');
                 img.src = url;
