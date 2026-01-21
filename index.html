@@ -4,8 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Mangás</title>
+    <!-- Cache buster: 2026-01-20-130920 -->
+    
+    <!-- Wrapper global para proteger getElementById contra null references -->
+    <script>
+        // Criar um objeto proxy para elementos não encontrados
+        function createNullElement() {
+            const noop = () => {};
+            const emptyStyle = new Proxy({}, { set: () => true, get: () => '' });
+            const emptyClassList = { add: noop, remove: noop, toggle: noop, contains: () => false };
+
+            return new Proxy({}, {
+                get: (target, prop) => {
+                    // Métodos
+                    if (prop === 'addEventListener' || prop === 'removeEventListener' || prop === 'focus' || prop === 'blur') return noop;
+
+                    // Propriedades comuns com valores seguros
+                    if (prop === 'value' || prop === 'textContent' || prop === 'innerText' || prop === 'innerHTML' || prop === 'alt' || prop === 'title') return '';
+                    if (prop === 'checked') return false;
+                    if (prop === 'disabled') return false;
+                    if (prop === 'files') return [];
+                    if (prop === 'src' || prop === 'href') return '';
+                    if (prop === 'classList') return emptyClassList;
+                    if (prop === 'style') return emptyStyle;
+
+                    // Para chamadas como el.querySelector(...)
+                    if (prop === 'querySelector' || prop === 'querySelectorAll') return () => [];
+
+                    // Retorna noop para funções e valor vazio para outras propriedades
+                    return noop;
+                },
+                set: () => true
+            });
+        }
+
+        const originalGetElementById = document.getElementById;
+        const originalQuerySelector = document.querySelector;
+        
+        document.getElementById = function(id) {
+            const el = originalGetElementById.call(document, id);
+            return el || createNullElement();
+        };
+        
+        document.querySelector = function(selector) {
+            const el = originalQuerySelector.call(document, selector);
+            return el || createNullElement();
+        };
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Supabase Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         * {
             margin: 0;
@@ -930,6 +982,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="preco">Preço (R$):</label>
+                        <input type="number" id="preco" placeholder="Digite o preço" step="0.01" min="0" class="input-optional">
+                    </div>
+
+                    <div class="form-group">
                         <label for="localizacao">Localização (Prateleira/Posição):</label>
                         <input type="text" id="localizacao" placeholder="Ex: Prateleira A - 01" class="input-optional">
                     </div>
@@ -1018,6 +1075,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="edit-preco">Preço (R$):</label>
+                    <input type="number" id="edit-preco" step="0.01" min="0" class="input-optional">
+                </div>
+
+                <div class="form-group">
                     <label for="edit-localizacao">Localização (Prateleira/Posição):</label>
                     <input type="text" id="edit-localizacao" placeholder="Ex: Prateleira A - 01" class="input-optional">
                 </div>
@@ -1068,165 +1130,121 @@
         let historicoEstoque = {}; // Armazena histórico por ID do mangá
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMangas();
-            renderMangas();
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔄 Iniciando aplicação...');
+            
+            // Aguarda um pouco para Supabase inicializar
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (typeof supabaseClient === 'undefined') {
+                console.error('❌ Supabase não foi carregado');
+                showMessage('Erro: Supabase não foi carregado. Verifique a configuração.', 'error');
+                loadMangas(); // Fallback para localStorage
+            } else {
+                console.log('✅ Supabase carregado! Buscando dados...');
+                try {
+                    // Carrega dados do Supabase
+                    const supabaseMangas = await loadMangasFromSupabase();
+                    mangas = supabaseMangas || [];
+                    console.log(`✅ ${mangas.length} mangás carregadas do Supabase`);
+                    
+                    const supabaseHistorico = await loadHistoricoFromSupabase();
+                    historicoEstoque = supabaseHistorico || {};
+                    console.log('✅ Histórico carregado do Supabase');
+                    
+                    renderMangas();
+                } catch (error) {
+                    console.error('⚠️ Erro ao carregar Supabase:', error);
+                    console.log('📍 Usando localStorage como fallback');
+                    // Se falhar, tenta localStorage como fallback
+                    loadMangas();
+                    renderMangas();
+                }
+            }
+            
             setupEventListeners();
             setupScannerListeners();
+            
+            // Event listeners que precisam do DOM pronto
+            const btnBuscarCapa = document.getElementById('btn-buscar-capa');
+            if (btnBuscarCapa) {
+                btnBuscarCapa.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const nomeEl = document.getElementById('nome');
+                    const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+                    
+                    if (!nome) {
+                        showMessage('Digite o nome do mangá primeiro!', 'error');
+                        return;
+                    }
+
+                    const btn = e.target;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+                    try {
+                        currentCapaTipo = 'add';
+                        await buscarMultiplasCapas(nome, 'add');
+                    } catch (error) {
+                        showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            }
+
+            const btnBuscarCapaEdit = document.getElementById('btn-buscar-capa-edit');
+            if (btnBuscarCapaEdit && btnBuscarCapaEdit.addEventListener) {
+                btnBuscarCapaEdit.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const nomeEl = document.getElementById('edit-nome');
+                    const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+                    
+                    if (!nome) {
+                        showMessage('Digite o nome do mangá primeiro!', 'error');
+                        return;
+                    }
+
+                    const btn = e.target;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loading"></span> Buscando...';
+
+                    try {
+                        currentCapaTipo = 'edit';
+                        await buscarMultiplasCapas(nome, 'edit');
+                    } catch (error) {
+                        showMessage('Erro ao buscar capas. Tente novamente.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            }
         });
 
         function setupEventListeners() {
-            document.getElementById('manga-form').addEventListener('submit', addManga);
-            document.getElementById('search').addEventListener('input', handleSearch);
-            document.querySelector('.close').addEventListener('click', closeEditModal);
+            // Função simples para adicionar listeners com segurança
+            const safeAddListener = (selector, event, handler) => {
+                const el = typeof selector === 'string' ? 
+                    (selector.startsWith('.') || selector.startsWith('#')) ? document.querySelector(selector) : document.getElementById(selector) 
+                    : selector;
+                if (el) el.addEventListener(event, handler);
+            };
+
+            // Listeners essenciais
+            safeAddListener('manga-form', 'submit', addManga);
+            safeAddListener('search', 'input', handleSearch);
+            safeAddListener('.close', 'click', closeEditModal);
+
             window.addEventListener('click', (e) => {
                 const modal = document.getElementById('editModal');
-                if (e.target === modal) closeEditModal();
+                if (modal && e.target === modal) closeEditModal();
             });
 
-            // Auto-buscar ao digitar código de barras
-            let debounceTimer;
-            document.getElementById('codigo').addEventListener('blur', (e) => {
-                const codigo = e.target.value.trim();
-                if (codigo.length >= 10) { // ISBN tem pelo menos 10 dígitos
-                    buscarPorCodigoDeBarras(codigo, 'add', true);
-                }
-            });
-
-            // Auto-buscar ao digitar código de barras no modal de edição
-            document.getElementById('edit-codigo').addEventListener('blur', (e) => {
-                const codigo = e.target.value.trim();
-                if (codigo.length >= 10) {
-                    buscarPorCodigoDeBarras(codigo, 'edit', true);
-                }
-            });
-
-            // Busca em tempo real ao digitar o código (com debounce)
-            document.getElementById('codigo').addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                const codigo = e.target.value.trim();
-                
-                if (codigo.length >= 10) {
-                    // Mostrar indicador de busca
-                    const infoBox = document.getElementById('ml-info');
-                    infoBox.classList.remove('show');
-                    
-                    debounceTimer = setTimeout(() => {
-                        buscarPorCodigoDeBarras(codigo, 'add', true);
-                    }, 800);
-                }
-            });
-
-            // Busca em tempo real ao digitar o código no modal (com debounce)
-            document.getElementById('edit-codigo').addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                const codigo = e.target.value.trim();
-                
-                if (codigo.length >= 10) {
-                    const infoBox = document.getElementById('ml-info-edit');
-                    infoBox.classList.remove('show');
-                    
-                    debounceTimer = setTimeout(() => {
-                        buscarPorCodigoDeBarras(codigo, 'edit', true);
-                    }, 800);
-                }
-            });
-
-            // Auto-buscar ao digitar nome do mangá
-            document.getElementById('nome').addEventListener('blur', (e) => {
-                const nome = e.target.value.trim();
-                const codigo = document.getElementById('codigo').value.trim();
-                // Só busca por nome se não tiver código válido
-                if (nome.length >= 3 && codigo.length < 10) {
-                    buscarPorNomeManga(nome, 'add', true);
-                }
-            });
-
-            // Auto-buscar ao digitar nome do mangá no modal de edição
-            document.getElementById('edit-nome').addEventListener('blur', (e) => {
-                const nome = e.target.value.trim();
-                const codigo = document.getElementById('edit-codigo').value.trim();
-                // Só busca por nome se não tiver código válido
-                if (nome.length >= 3 && codigo.length < 10) {
-                    buscarPorNomeManga(nome, 'edit', true);
-                }
-            });
-
-            // Event listeners para capa manual - adicionar
-            document.getElementById('capa-url').addEventListener('change', () => {
-                const url = document.getElementById('capa-url').value.trim();
-                if (url) {
-                    const img = document.getElementById('preview-img');
-                    img.src = url;
-                    img.onload = () => {
-                        document.getElementById('preview-capa').style.display = 'flex';
-                    };
-                    img.onerror = () => {
-                        document.getElementById('preview-capa').style.display = 'none';
-                        showMessage('Erro ao carregar a imagem. Verifique o URL.', 'error');
-                    };
-                }
-            });
-
-            document.getElementById('capa-file').addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = document.getElementById('preview-img');
-                        img.src = event.target.result;
-                        document.getElementById('preview-capa').style.display = 'flex';
-                        document.getElementById('capa').value = event.target.result;
-                        document.getElementById('capa-url').value = '';
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            });
-
-            document.getElementById('btn-remover-capa').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('capa-url').value = '';
-                document.getElementById('capa-file').value = '';
-                document.getElementById('capa').value = '';
-                document.getElementById('preview-capa').style.display = 'none';
-            });
-
-            // Event listeners para capa manual - editar
-            document.getElementById('edit-capa-url').addEventListener('change', () => {
-                const url = document.getElementById('edit-capa-url').value.trim();
-                if (url) {
-                    const img = document.getElementById('preview-img-edit');
-                    img.src = url;
-                    img.onload = () => {
-                        document.getElementById('preview-capa-edit').style.display = 'flex';
-                    };
-                    img.onerror = () => {
-                        document.getElementById('preview-capa-edit').style.display = 'none';
-                        showMessage('Erro ao carregar a imagem. Verifique o URL.', 'error');
-                    };
-                }
-            });
-
-            document.getElementById('edit-capa-file').addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = document.getElementById('preview-img-edit');
-                        img.src = event.target.result;
-                        document.getElementById('preview-capa-edit').style.display = 'flex';
-                        document.getElementById('edit-capa').value = event.target.result;
-                        document.getElementById('edit-capa-url').value = '';
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            });
-
-            document.getElementById('btn-remover-capa-edit').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('edit-capa-url').value = '';
-                document.getElementById('edit-capa-file').value = '';
-                document.getElementById('edit-capa').value = '';
-                document.getElementById('preview-capa-edit').style.display = 'none';
-            });
+            console.log('✅ Event listeners configurados com sucesso');
         }
 
         function loadMangas() {
@@ -1237,19 +1255,57 @@
         }
 
         function saveMangas() {
+            // Salva sempre no localStorage como backup
             localStorage.setItem('mangas', JSON.stringify(mangas));
             localStorage.setItem('historicoEstoque', JSON.stringify(historicoEstoque));
+            
+            // Sincroniza com Supabase
+            syncMangasWithSupabase();
+        }
+        
+        async function syncMangasWithSupabase() {
+            try {
+                for (const manga of mangas) {
+                    // Se o mangá tem um ID numérico (criado localmente), cria no Supabase
+                    if (typeof manga.id === 'number') {
+                        const docId = await saveMangaToSupabase(manga);
+                        manga.id = docId; // Atualiza com o ID do Supabase
+                    } else {
+                        // Se já tem ID (do Supabase), atualiza
+                        await updateMangaInSupabase(manga.id, manga);
+                    }
+                }
+                
+                // Sincroniza histórico também
+                for (const [mangaId, movimentacoes] of Object.entries(historicoEstoque)) {
+                    await saveHistoricoToSupabase(mangaId, movimentacoes);
+                }
+                
+                console.log('✅ Dados sincronizados com Supabase');
+            } catch (error) {
+                console.error('⚠️ Erro ao sincronizar com Supabase:', error);
+                // Mesmo com erro, os dados estão salvos no localStorage
+            }
         }
 
-        function addManga(e) {
+        async function addManga(e) {
             e.preventDefault();
 
-            const codigo = document.getElementById('codigo').value.trim();
-            const nome = document.getElementById('nome').value.trim();
-            const autor = document.getElementById('autor').value.trim();
-            const volume = document.getElementById('volume').value.trim();
-            const estoque = parseInt(document.getElementById('estoque').value) || 0;
-            const localizacao = document.getElementById('localizacao').value.trim();
+            const codigoEl = document.getElementById('codigo');
+            const nomeEl = document.getElementById('nome');
+            const autorEl = document.getElementById('autor');
+            const volumeEl = document.getElementById('volume');
+            const estoqueEl = document.getElementById('estoque');
+            const precoEl = document.getElementById('preco');
+            const localizacaoEl = document.getElementById('localizacao');
+
+            const codigo = (codigoEl && codigoEl.value) ? codigoEl.value.trim() : '';
+            const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+            const autor = (autorEl && autorEl.value) ? autorEl.value.trim() : '';
+            const volume = (volumeEl && volumeEl.value) ? volumeEl.value.trim() : '';
+            const estoque = parseInt((estoqueEl && estoqueEl.value) ? estoqueEl.value : '0') || 0;
+            const preco = (precoEl && precoEl.value) ? precoEl.value.trim() : '';
+            const localizacao = (localizacaoEl && localizacaoEl.value) ? localizacaoEl.value.trim() : '';
 
             // Validate duplicate barcode
             if (mangas.some(m => m.codigo === codigo)) {
@@ -1258,6 +1314,22 @@
             }
 
             const id = Date.now();
+            const capaEl = document.getElementById('capa');
+            let capa = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
+            
+            // Se há arquivo de capa selecionado, faz upload para Supabase Storage
+            const capaFile = (document.getElementById('capa-file').files || [])[0] || null;
+            if (capaFile) {
+                try {
+                    console.log('📤 Fazendo upload da capa para Supabase Storage...');
+                    capa = await uploadCapaToSupabaseStorage(capaFile, `manga_${id}`);
+                    console.log('✅ Capa enviada com sucesso');
+                } catch (error) {
+                    console.warn('⚠️ Erro ao fazer upload da capa, usando URL local:', error);
+                    // Continua com a URL local se houver
+                }
+            }
+            
             const manga = {
                 id,
                 codigo,
@@ -1265,8 +1337,9 @@
                 autor,
                 volume,
                 estoque,
+                preco,
                 localizacao,
-                capa: document.getElementById('capa').value.trim(),
+                capa: capa,
                 data: new Date().toLocaleDateString('pt-BR')
             };
 
@@ -1278,20 +1351,38 @@
             }
             
             saveMangas();
+            
+            // Sincroniza imediatamente com Supabase
+            try {
+                console.log('📤 Salvando manga no Supabase:', manga);
+                const mangaId = await saveMangaToSupabase({
+                    id: manga.id,
+                    titulo: manga.nome || manga.titulo,
+                    autor: manga.autor,
+                    preco: manga.preco,
+                    capa_url: manga.capa || null
+                });
+                console.log('✅ Manga salvo no Supabase com ID:', mangaId);
+            } catch (error) {
+                console.warn('⚠️ Erro ao sincronizar manga com Supabase:', error);
+            }
+            
             renderMangas();
             document.getElementById('manga-form').reset();
             document.getElementById('estoque').value = '1';
+            document.getElementById('preco').value = '';
             document.getElementById('localizacao').value = '';
             document.getElementById('capa').value = '';
             document.getElementById('capa-url').value = '';
             document.getElementById('capa-file').value = '';
-            document.getElementById('preview-capa').style.display = 'none';
+            const previewCapaEl = document.getElementById('preview-capa'); if (previewCapaEl) previewCapaEl.style.display = 'none';
             showMessage('Mangá adicionado com sucesso!', 'success');
         }
 
         function renderMangas(toRender = mangas) {
             const list = document.getElementById('manga-list');
-            document.getElementById('total-count').textContent = mangas.length;
+            const totalCountEl = document.getElementById('total-count'); if (totalCountEl) totalCountEl.textContent = mangas.length;
+            if (!list) return;
 
             if (toRender.length === 0) {
                 list.innerHTML = '<div class="empty-state"><p>Nenhum mangá encontrado.</p></div>';
@@ -1310,6 +1401,7 @@
                         ${manga.volume ? `<div class="manga-code">📖 Vol. ${escapeHtml(manga.volume)}</div>` : ''}
                         ${manga.localizacao ? `<div class="manga-code">📍 ${escapeHtml(manga.localizacao)}</div>` : ''}
                         <div class="manga-code" style="color: ${manga.estoque > 0 ? '#4CAF50' : '#f44336'}; font-weight: 600;">📊 Estoque: ${manga.estoque || 0}</div>
+                        ${manga.preco ? `<div class="manga-code" style="color: #FF9800; font-weight: 600;">💰 R$ ${parseFloat(manga.preco).toFixed(2)}</div>` : ''}
                         <div class="manga-date">Adicionado: ${manga.data}</div>
                     </div>
                     <div class="manga-actions">
@@ -1336,69 +1428,100 @@
         function openEditModal(id) {
             editingIndex = mangas.findIndex(m => m.id === id);
             const manga = mangas[editingIndex];
+            
+            if (!manga) {
+                console.error('Manga não encontrado:', id);
+                return;
+            }
 
-            document.getElementById('edit-codigo').value = manga.codigo;
-            document.getElementById('edit-nome').value = manga.nome;
-            document.getElementById('edit-autor').value = manga.autor || '';
-            document.getElementById('edit-volume').value = manga.volume || '';
-            document.getElementById('edit-estoque').value = manga.estoque || 1;
-            document.getElementById('edit-localizacao').value = manga.localizacao || '';
-            document.getElementById('edit-capa').value = manga.capa || '';
+            // Proteger acessos a elementos
+            const setInputValue = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value || '';
+            };
+
+            setInputValue('edit-codigo', manga.codigo);
+            setInputValue('edit-nome', manga.nome);
+            setInputValue('edit-autor', manga.autor);
+            setInputValue('edit-volume', manga.volume);
+            setInputValue('edit-estoque', manga.estoque || 1);
+            setInputValue('edit-preco', manga.preco);
+            setInputValue('edit-localizacao', manga.localizacao);
+            setInputValue('edit-capa', manga.capa);
 
             // Mostrar preview da capa se existir
             if (manga.capa) {
                 const preview = document.getElementById('preview-capa-edit');
                 const img = document.getElementById('preview-img-edit');
-                img.src = manga.capa;
-                preview.style.display = 'flex';
+                if (preview && img) {
+                    img.src = manga.capa;
+                    preview.style.display = 'flex';
+                }
             } else {
-                document.getElementById('preview-capa-edit').style.display = 'none';
+                const preview = document.getElementById('preview-capa-edit');
+                if (preview) preview.style.display = 'none';
             }
 
             // Exibir histórico de estoque
             exibirHistoricoEstoque(id);
 
-            document.getElementById('editModal').style.display = 'block';
+            const modal = document.getElementById('editModal');
+            if (modal) modal.style.display = 'block';
         }
 
         function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
+            const modal = document.getElementById('editModal');
+            if (modal) modal.style.display = 'none';
             editingIndex = -1;
         }
 
-        document.getElementById('edit-form').addEventListener('submit', (e) => {
-            e.preventDefault();
+        const editFormEl = document.getElementById('edit-form');
+        if (editFormEl) {
+            editFormEl.addEventListener('submit', (e) => {
+                e.preventDefault();
 
-            const codigo = document.getElementById('edit-codigo').value.trim();
-            const nome = document.getElementById('edit-nome').value.trim();
-            const autor = document.getElementById('edit-autor').value.trim();
-            const volume = document.getElementById('edit-volume').value.trim();
-            const estoque = parseInt(document.getElementById('edit-estoque').value) || 0;
-            const localizacao = document.getElementById('edit-localizacao').value.trim();
-            const capa = document.getElementById('edit-capa').value.trim();
+                const codigoEl = document.getElementById('edit-codigo');
+                const nomeEl = document.getElementById('edit-nome');
+                const autorEl = document.getElementById('edit-autor');
+                const volumeEl = document.getElementById('edit-volume');
+                const estoqueEl = document.getElementById('edit-estoque');
+                const precoEl = document.getElementById('edit-preco');
+                const localizacaoEl = document.getElementById('edit-localizacao');
+                const capaEl = document.getElementById('edit-capa');
 
-            // Check for duplicate code (excluding current manga)
-            if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
-                showMessage('Este código de barras já está cadastrado!', 'error');
-                return;
-            }
+                const codigo = (codigoEl && codigoEl.value) ? codigoEl.value.trim() : '';
+                const nome = (nomeEl && nomeEl.value) ? nomeEl.value.trim() : '';
+                const autor = (autorEl && autorEl.value) ? autorEl.value.trim() : '';
+                const volume = (volumeEl && volumeEl.value) ? volumeEl.value.trim() : '';
+                const estoque = parseInt((estoqueEl && estoqueEl.value) ? estoqueEl.value : '0') || 0;
+                const preco = (precoEl && precoEl.value) ? precoEl.value.trim() : '';
+                const localizacao = (localizacaoEl && localizacaoEl.value) ? localizacaoEl.value.trim() : '';
+                const capa = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
 
-            mangas[editingIndex] = {
-                ...mangas[editingIndex],
-                codigo,
-                nome,
-                autor,
-                volume,
-                estoque,
-                localizacao,
-                capa
-            };
+                // Check for duplicate code (excluding current manga)
+                if (mangas.some((m, i) => m.codigo === codigo && i !== editingIndex)) {
+                    showMessage('Este código de barras já está cadastrado!', 'error');
+                    return;
+                }
 
-            saveMangas();
-            renderMangas();
-            closeEditModal();
-            showMessage('Mangá atualizado com sucesso!', 'success');
-        });
+                mangas[editingIndex] = {
+                    ...mangas[editingIndex],
+                    codigo,
+                    nome,
+                    autor,
+                    volume,
+                    estoque,
+                    preco,
+                    localizacao,
+                    capa
+                };
+
+                saveMangas();
+                renderMangas();
+                closeEditModal();
+                showMessage('Mangá atualizado com sucesso!', 'success');
+            });
+        }
 
         function handleSearch(e) {
             const query = e.target.value.toLowerCase();
@@ -1432,64 +1555,13 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        // Buscar capa automaticamente
-        document.getElementById('btn-buscar-capa').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const nome = document.getElementById('nome').value.trim();
-            
-            if (!nome) {
-                showMessage('Digite o nome do mangá primeiro!', 'error');
-                return;
-            }
-
-            const btn = e.target;
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Buscando...';
-
-            try {
-                currentCapaTipo = 'add';
-                await buscarMultiplasCapas(nome, 'add');
-            } catch (error) {
-                showMessage('Erro ao buscar capas. Tente novamente.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        });
-
-        document.getElementById('btn-buscar-capa-edit').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const nome = document.getElementById('edit-nome').value.trim();
-            
-            if (!nome) {
-                showMessage('Digite o nome do mangá primeiro!', 'error');
-                return;
-            }
-
-            const btn = e.target;
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Buscando...';
-
-            try {
-                currentCapaTipo = 'edit';
-                await buscarMultiplasCapas(nome, 'edit');
-            } catch (error) {
-                showMessage('Erro ao buscar capas. Tente novamente.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        });
-
         async function buscarMultiplasCapas(nomeManga, tipo) {
             try {
                 const container = document.getElementById('capas-container');
-                container.innerHTML = '<div class="capas-loading"><div class="loading"></div>Buscando capas na internet...</div>';
+                if (container) container.innerHTML = '<div class="capas-loading"><div class="loading"></div>Buscando capas na internet...</div>';
                 
                 const modal = document.getElementById('modalCapas');
-                modal.style.display = 'block';
+                if (modal) modal.style.display = 'block';
 
                 // Definir o tipo atual
                 currentCapaTipo = tipo;
@@ -1506,8 +1578,8 @@
                 let capas = await buscarCapasOtimizadas(nomeManga, 10);
 
                 if (capas.length === 0) {
-                    container.innerHTML = '<div class="capas-loading">❌ Nenhuma capa encontrada. Tente novamente com outro nome.</div>';
-                    document.getElementById('btn-carregar-mais').style.display = 'none';
+                    if (container) container.innerHTML = '<div class="capas-loading">❌ Nenhuma capa encontrada. Tente novamente com outro nome.</div>';
+                    const btnCarregarMais = document.getElementById('btn-carregar-mais'); if (btnCarregarMais) btnCarregarMais.style.display = 'none';
                     return;
                 }
 
@@ -1515,11 +1587,10 @@
                 exibirCapasParaSeleção(capas, tipo);
                 
                 // Mostrar botão de carregar mais se houver possibilidade
-                document.getElementById('btn-carregar-mais').style.display = 'block';
-                document.getElementById('btn-carregar-mais').disabled = false;
+                const btnCarregarMais = document.getElementById('btn-carregar-mais'); if (btnCarregarMais) { btnCarregarMais.style.display = 'block'; btnCarregarMais.disabled = false; }
             } catch (error) {
                 console.error('Erro ao buscar múltiplas capas:', error);
-                document.getElementById('capas-container').innerHTML = '<div class="capas-loading">❌ Erro ao buscar capas.</div>';
+                const container = document.getElementById('capas-container'); if (container) container.innerHTML = '<div class="capas-loading">❌ Erro ao buscar capas.</div>';
             }
         }
 
@@ -1791,7 +1862,7 @@
             };
         }
 
-        document.getElementById('btn-confirmar-capa').addEventListener('click', () => {
+        const el_btn_confirmar_capa = document.getElementById('btn-confirmar-capa'); if (el_btn_confirmar_capa) el_btn_confirmar_capa.addEventListener('click', () => {
             if (!selectedCapaUrl) {
                 showMessage('Selecione uma capa primeiro!', 'error');
                 return;
@@ -1833,40 +1904,44 @@
             showMessage('Capa selecionada com sucesso!', 'success');
         });
 
-        document.getElementById('btn-cancelar-capas').addEventListener('click', fecharModalCapas);
+        const el_btn_cancelar_capas = document.getElementById('btn-cancelar-capas'); if (el_btn_cancelar_capas) el_btn_cancelar_capas.addEventListener('click', fecharModalCapas);
 
         // Event listener para adicionar capa manual via URL
-        document.getElementById('btn-adicionar-capa-manual').addEventListener('click', () => {
+        const el_btn_adicionar_capa_manual = document.getElementById('btn-adicionar-capa-manual'); if (el_btn_adicionar_capa_manual) el_btn_adicionar_capa_manual.addEventListener('click', () => {
             const urlInput = document.getElementById('capa-url-manual');
             const fileInput = document.getElementById('capa-upload-manual');
-            const url = urlInput.value.trim();
+            const url = (urlInput && urlInput.value) ? urlInput.value.trim() : '';
 
             if (url) {
                 // Usar URL fornecida
                 selecionarCapaManual(url);
-            } else if (fileInput.files.length > 0) {
-                // Usar arquivo enviado
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selecionarCapaManual(e.target.result);
-                };
-                reader.readAsDataURL(file);
             } else {
-                showMessage('Digite uma URL ou selecione um arquivo!', 'error');
+                const files = (fileInput && fileInput.files) ? fileInput.files : [];
+                const file = files[0] || null;
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        selecionarCapaManual(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showMessage('Digite uma URL ou selecione um arquivo!', 'error');
+                }
             }
         });
 
         // Event listener para preview de arquivo
-        document.getElementById('capa-upload-manual').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+        const el_capa_upload_manual = document.getElementById('capa-upload-manual'); if (el_capa_upload_manual) el_capa_upload_manual.addEventListener('change', (e) => {
+            const files = (e && e.target && e.target.files) ? e.target.files : [];
+            const file = files[0] || null;
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const img = document.getElementById('preview-img-manual');
-                    img.src = event.target.result;
-                    document.getElementById('preview-capa-manual').style.display = 'block';
+                    if (img) img.src = event.target.result;
+                    const preview = document.getElementById('preview-capa-manual'); if (preview) preview.style.display = 'block';
                 };
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
             }
         });
 
@@ -1922,43 +1997,45 @@
         });
 
         // Adicionar listener do botão carregar mais
-        document.getElementById('btn-carregar-mais').addEventListener('click', carregarMaisCapas);
+        const el_btn_carregar_mais = document.getElementById('btn-carregar-mais'); if (el_btn_carregar_mais) el_btn_carregar_mais.addEventListener('click', carregarMaisCapas);
 
         // Preview da capa quando digitar URL
-        document.getElementById('capa').addEventListener('change', () => {
-            const url = document.getElementById('capa').value.trim();
+        const el_capa = document.getElementById('capa'); if (el_capa) el_capa.addEventListener('change', () => {
+            const capaEl = document.getElementById('capa');
+            const url = (capaEl && capaEl.value) ? capaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img');
-                img.src = url;
+                if (img) img.src = url;
                 img.onload = () => {
-                    document.getElementById('preview-capa').style.display = 'flex';
+                    const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'flex';
                 };
                 img.onerror = () => {
-                    document.getElementById('preview-capa').style.display = 'none';
+                    const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'none';
                 };
             } else {
-                document.getElementById('preview-capa').style.display = 'none';
+                const preview = document.getElementById('preview-capa'); if (preview) preview.style.display = 'none';
             }
         });
 
-        document.getElementById('edit-capa').addEventListener('change', () => {
-            const url = document.getElementById('edit-capa').value.trim();
+        const el_edit_capa = document.getElementById('edit-capa'); if (el_edit_capa) el_edit_capa.addEventListener('change', () => {
+            const editCapaEl = document.getElementById('edit-capa');
+            const url = (editCapaEl && editCapaEl.value) ? editCapaEl.value.trim() : '';
             if (url) {
                 const img = document.getElementById('preview-img-edit');
-                img.src = url;
+                if (img) img.src = url;
                 img.onload = () => {
-                    document.getElementById('preview-capa-edit').style.display = 'flex';
+                    const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'flex';
                 };
                 img.onerror = () => {
-                    document.getElementById('preview-capa-edit').style.display = 'none';
+                    const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'none';
                 };
             } else {
-                document.getElementById('preview-capa-edit').style.display = 'none';
+                const preview = document.getElementById('preview-capa-edit'); if (preview) preview.style.display = 'none';
             }
         });
 
         // Buscar informações por código de barras
-        document.getElementById('btn-buscar-codigo').addEventListener('click', async (e) => {
+        const el_btn_buscar_codigo = document.getElementById('btn-buscar-codigo'); if (el_btn_buscar_codigo) el_btn_buscar_codigo.addEventListener('click', async (e) => {
             e.preventDefault();
             const codigo = document.getElementById('codigo').value.trim();
             
@@ -1970,7 +2047,7 @@
             await buscarPorCodigoDeBarras(codigo, 'add');
         });
 
-        document.getElementById('btn-buscar-codigo-edit').addEventListener('click', async (e) => {
+        const el_btn_buscar_codigo_edit = document.getElementById('btn-buscar-codigo-edit'); if (el_btn_buscar_codigo_edit) el_btn_buscar_codigo_edit.addEventListener('click', async (e) => {
             e.preventDefault();
             const codigo = document.getElementById('edit-codigo').value.trim();
             
@@ -2422,9 +2499,10 @@
             let html = '';
             items.slice(0, 3).forEach(item => {
                 const preco = item.price ? `R$ ${item.price.toFixed(2)}` : 'Preço não disponível';
+                const precoValor = item.price ? item.price.toFixed(2) : '';
                 
                 html += `
-                    <div class="ml-item">
+                    <div class="ml-item" ${precoValor ? `onclick="preencherPrecoDeMercadoLivre(${precoValor}, '${tipo === 'add' ? 'add' : 'edit'}')"` : ''} style="${precoValor ? 'cursor: pointer;' : ''}">
                         <div class="ml-title">${escapeHtml(item.title)}</div>
                         <div class="ml-price">${preco}</div>
                         ${item.seller ? `<div style="font-size: 0.85em; color: #666;">Vendedor: ${escapeHtml(item.seller.nickname)}</div>` : ''}
@@ -2596,5 +2674,9 @@
             container.innerHTML = html;
         }
     </script>
+    
+    <!-- Supabase Configuration and Manager -->
+    <script src="supabase-config.js"></script>
+    <script src="supabase-manager.js"></script>
 </body>
 </html>
